@@ -34369,7 +34369,7 @@ public class ChatActivity extends BaseFragment implements
                     editText.setTextIsSelectable(true);
                     editText.setKeyListener(null);
                     editText.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
-                    new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity()).setTitle("Копирование части текста").setView(editText).setPositiveButton("Скопировать всё", (d, w) -> { AndroidUtilities.addToClipboard(editText.getText()); BulletinFactory.of(this).createCopyBulletin(LocaleController.getString(R.string.TextCopied)).show(); }).setNegativeButton(LocaleController.getString(R.string.Cancel), null).show();
+                    new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity()).setTitle("РљРѕРїРёСЂРѕРІР°РЅРёРµ С‡Р°СЃС‚Рё С‚РµРєСЃС‚Р°").setView(editText).setPositiveButton("РЎРєРѕРїРёСЂРѕРІР°С‚СЊ РІСЃС‘", (d, w) -> { AndroidUtilities.addToClipboard(editText.getText()); BulletinFactory.of(this).createCopyBulletin(LocaleController.getString(R.string.TextCopied)).show(); }).setNegativeButton(LocaleController.getString(R.string.Cancel), null).show();
                 }
                 break;
             }
@@ -34378,15 +34378,15 @@ public class ChatActivity extends BaseFragment implements
                     org.telegram.messenger.LumkaDatabase db = org.telegram.messenger.LumkaDatabase.getInstance();
                     ArrayList<String> history = db != null ? db.getEditHistory(selectedObject.getDialogId(), selectedObject.getId()) : null;
                     if (history == null || history.isEmpty()) {
-                        BulletinFactory.of(this).createSimpleBulletin(R.raw.info, "Нет сохранённых предыдущих версий").show();
+                        BulletinFactory.of(this).createSimpleBulletin(R.raw.info, "РќРµС‚ СЃРѕС…СЂР°РЅС‘РЅРЅС‹С… РїСЂРµРґС‹РґСѓС‰РёС… РІРµСЂСЃРёР№").show();
                     } else {
                         StringBuilder sb = new StringBuilder();
-                        for (int h = 0; h < history.size(); h++) sb.append("Версия ").append(h + 1).append(":\n").append(history.get(h)).append("\n\n");
+                        for (int h = 0; h < history.size(); h++) sb.append("Р’РµСЂСЃРёСЏ ").append(h + 1).append(":\n").append(history.get(h)).append("\n\n");
                         android.widget.TextView tv = new android.widget.TextView(getParentActivity());
                         tv.setText(sb.toString().trim());
                         tv.setTextIsSelectable(true);
                         tv.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
-                        new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity()).setTitle("История изменений").setView(tv).setPositiveButton(LocaleController.getString(R.string.OK), null).show();
+                        new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity()).setTitle("РСЃС‚РѕСЂРёСЏ РёР·РјРµРЅРµРЅРёР№").setView(tv).setPositiveButton(LocaleController.getString(R.string.OK), null).show();
                     }
                 }
                 break;
@@ -46672,11 +46672,11 @@ public class ChatActivity extends BaseFragment implements
                     items.add(LocaleController.getString(R.string.Copy));
                     options.add(OPTION_COPY);
                     icons.add(R.drawable.msg_copy);
-                    items.add("Копировать часть");
+                    items.add("РљРѕРїРёСЂРѕРІР°С‚СЊ С‡Р°СЃС‚СЊ");
                     options.add(OPTION_LUMKA_COPY_PART);
                     icons.add(R.drawable.msg_copy);
                     if (org.telegram.messenger.LumkaDatabase.getInstance() != null && org.telegram.messenger.LumkaDatabase.getInstance().hasEditHistory(selectedObject.getDialogId(), selectedObject.getId())) {
-                        items.add("История изменений");
+                        items.add("РСЃС‚РѕСЂРёСЏ РёР·РјРµРЅРµРЅРёР№");
                         options.add(OPTION_LUMKA_EDIT_HISTORY);
                         icons.add(R.drawable.msg_edit);
                     }
@@ -46731,11 +46731,11 @@ public class ChatActivity extends BaseFragment implements
                     items.add(LocaleController.getString(R.string.Copy));
                     options.add(OPTION_COPY);
                     icons.add(R.drawable.msg_copy);
-                    items.add("Копировать часть");
+                    items.add("РљРѕРїРёСЂРѕРІР°С‚СЊ С‡Р°СЃС‚СЊ");
                     options.add(OPTION_LUMKA_COPY_PART);
                     icons.add(R.drawable.msg_copy);
                     if (org.telegram.messenger.LumkaDatabase.getInstance() != null && org.telegram.messenger.LumkaDatabase.getInstance().hasEditHistory(selectedObject.getDialogId(), selectedObject.getId())) {
-                        items.add("История изменений");
+                        items.add("РСЃС‚РѕСЂРёСЏ РёР·РјРµРЅРµРЅРёР№");
                         options.add(OPTION_LUMKA_EDIT_HISTORY);
                         icons.add(R.drawable.msg_edit);
                     }
@@ -47057,11 +47057,11 @@ public class ChatActivity extends BaseFragment implements
                     items.add(LocaleController.getString(R.string.Copy));
                     options.add(OPTION_COPY);
                     icons.add(R.drawable.msg_copy);
-                    items.add("Копировать часть");
+                    items.add("РљРѕРїРёСЂРѕРІР°С‚СЊ С‡Р°СЃС‚СЊ");
                     options.add(OPTION_LUMKA_COPY_PART);
                     icons.add(R.drawable.msg_copy);
                     if (org.telegram.messenger.LumkaDatabase.getInstance() != null && org.telegram.messenger.LumkaDatabase.getInstance().hasEditHistory(selectedObject.getDialogId(), selectedObject.getId())) {
-                        items.add("История изменений");
+                        items.add("РСЃС‚РѕСЂРёСЏ РёР·РјРµРЅРµРЅРёР№");
                         options.add(OPTION_LUMKA_EDIT_HISTORY);
                         icons.add(R.drawable.msg_edit);
                     }

@@ -37,6 +37,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.UserObject;
 import org.telegram.messenger.voip.Instance;
 import org.telegram.messenger.voip.VoIPService;
 import org.telegram.tgnet.ConnectionsManager;
@@ -79,13 +80,13 @@ public class VoIPHelper {
 			String name = UserObject.getUserName(user);
 			new AlertDialog.Builder(activity)
 					.setTitle("LumkaGram")
-					.setMessage("Совершить звонок " + name + "?")
-					.setPositiveButton("Позвонить", (dialog, which) -> {
+					.setMessage("РЎРѕРІРµСЂС€РёС‚СЊ Р·РІРѕРЅРѕРє " + name + "?")
+					.setPositiveButton("РџРѕР·РІРѕРЅРёС‚СЊ", (dialog, which) -> {
 						org.telegram.messenger.LumkaConfig.confirmCall = false;
 						startCall(user, videoCall, canVideoCall, activity, userFull, accountInstance);
 						org.telegram.messenger.LumkaConfig.confirmCall = true;
 					})
-					.setNegativeButton("Отмена", null)
+					.setNegativeButton("РћС‚РјРµРЅР°", null)
 					.show();
 			return;
 		}
