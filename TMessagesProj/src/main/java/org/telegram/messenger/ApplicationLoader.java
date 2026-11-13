@@ -287,6 +287,13 @@ public class ApplicationLoader extends Application {
 
     @Override
     public void onCreate() {
+        // Must be the very first thing: writes any uncaught exception to Download/LumkaGram-crash.txt.
+        try {
+            LumkaCrashHandler.install(this);
+        } catch (Throwable ignore) {
+
+        }
+
         applicationLoaderInstance = this;
         try {
             applicationContext = getApplicationContext();

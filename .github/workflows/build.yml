@@ -93,9 +93,9 @@ jobs:
           chmod +x gradlew
           export GRADLE_OPTS="-Xmx6144m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dorg.gradle.daemon=false"
           if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-            ./gradlew assembleRelease -PkeystorePassword="$KEYSTORE_PASSWORD" -PkeyAlias="$KEY_ALIAS" -PkeyPassword="$KEY_PASSWORD" --stacktrace
+            ./gradlew :TMessagesProj_App:assembleRelease -PkeystorePassword="$KEYSTORE_PASSWORD" -PkeyAlias="$KEY_ALIAS" -PkeyPassword="$KEY_PASSWORD" --stacktrace
           else
-            ./gradlew assembleDebug --stacktrace
+            ./gradlew :TMessagesProj_App:assembleDebug --stacktrace
           fi
 
       - name: Locate and prepare APK
