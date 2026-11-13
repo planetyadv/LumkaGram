@@ -102,8 +102,15 @@ jobs:
         id: prepare_apk
         run: |
           mkdir -p output_apks
-          find TMessagesProj/build/outputs/apk/ -name "*.apk" -exec cp {} output_apks/ \;
+          # APKs are produced by the application modules (TMessagesProj_App*),
+          # not by the :TMessagesProj library module.
+          find . -path '*/build/outputs/apk/*' -name '*.apk' -exec cp -v {} output_apks/ \;
           ls -la output_apks/
+          if [ -z "$(ls -A output_apks)" ]; then
+            echo "::error::No APK produced. Listing all apk files found:"
+            find . -name '*.apk' -not -path './.git/*' || true
+            exit 1
+          fi
 
       - name: Upload APK to Artifacts
         uses: actions/upload-artifact@v4
