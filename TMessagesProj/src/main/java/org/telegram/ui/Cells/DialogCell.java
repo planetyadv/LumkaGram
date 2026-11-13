@@ -753,6 +753,11 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
         useForceThreeLines = forceThreeLines;
         currentAccount = account;
 
+        if (org.telegram.messenger.LumkaConfig.hideDialogsAvatars) {
+            drawAvatar = false;
+            messagePaddingStart = (forceThreeLines || SharedConfig.useThreeLinesLayout) ? 34 : 16;
+        }
+
         emojiStatusView = new View(context) {
             @Override
             protected void onDraw(@NonNull Canvas canvas) {

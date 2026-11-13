@@ -405,6 +405,13 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     protected void onCreate(Bundle savedInstanceState) {
         isActive = true;
         activeInstanceCount++;
+        try {
+            org.telegram.messenger.LumkaConfig.load();
+            if (org.telegram.messenger.LumkaConfig.blockScreenshots) {
+                getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
+            }
+        } catch (Throwable ignore) {
+        }
         if (BuildVars.DEBUG_VERSION) {
             StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder(StrictMode.getVmPolicy())
                 .detectLeakedClosableObjects()
@@ -7209,6 +7216,14 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     @Override
     protected void onResume() {
         super.onResume();
+        try {
+            if (org.telegram.messenger.LumkaConfig.blockScreenshots) {
+                getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
+            } else {
+                getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
+            }
+        } catch (Throwable ignore) {
+        }
         WidgetMedia.onAppPaused(false);
         isResumed = true;
         PipCoordinator.getInstance().onActivityResume(this);

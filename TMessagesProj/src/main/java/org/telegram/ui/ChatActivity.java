@@ -1248,6 +1248,7 @@ public class ChatActivity extends BaseFragment implements
     public final static int OPTION_COPY = 3;
     public final static int OPTION_LUMKA_COPY_PART = 991;
     public final static int OPTION_LUMKA_EDIT_HISTORY = 992;
+    public final static int OPTION_LUMKA_COPY_ID = 993;
     public final static int OPTION_SAVE_TO_GALLERY = 4;
     public final static int OPTION_APPLY_LOCALIZATION_OR_THEME = 5;
     public final static int OPTION_SHARE = 6;
@@ -34391,6 +34392,33 @@ public class ChatActivity extends BaseFragment implements
                 }
                 break;
             }
+            case OPTION_LUMKA_COPY_ID: {
+                if (selectedObject != null && getParentActivity() != null) {
+                    long did = selectedObject.getDialogId();
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("ID чата: ").append(did);
+                    if (did < 0) {
+                        long publicId = did - 1000000000000L;
+                        sb.append("\nПубличный ID: ").append(publicId);
+                    }
+                    sb.append("\nID сообщения: ").append(selectedObject.getId());
+                    final String text = sb.toString();
+                    android.widget.TextView tv = new android.widget.TextView(getParentActivity());
+                    tv.setText(text);
+                    tv.setTextIsSelectable(true);
+                    tv.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
+                    new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity())
+                            .setTitle("ID чата и сообщения")
+                            .setView(tv)
+                            .setPositiveButton("Скопировать", (d, w) -> {
+                                AndroidUtilities.addToClipboard(text);
+                                BulletinFactory.of(this).createCopyBulletin(LocaleController.getString(R.string.TextCopied)).show();
+                            })
+                            .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                            .show();
+                }
+                break;
+            }
             case OPTION_COPY: {
                 final TL_iv.RichMessage copyRichMessage = selectedObject.messageOwner != null ? selectedObject.messageOwner.rich_message : null;
                 if (selectedObject.isDice()) {
@@ -47169,6 +47197,12 @@ public class ChatActivity extends BaseFragment implements
             items.add(getString(R.string.WelcomeMessageRevert));
             options.add(OPTION_WELCOME_REVERT);
             icons.add(R.drawable.outline_revert_24);
+        }
+
+        if (selectedObject != null && selectedObject.messageOwner != null && selectedObject.getId() > 0) {
+            items.add("ID чата и сообщения");
+            options.add(OPTION_LUMKA_COPY_ID);
+            icons.add(R.drawable.msg_info);
         }
     }
 

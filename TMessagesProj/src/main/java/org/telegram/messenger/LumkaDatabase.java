@@ -128,4 +128,73 @@ public class LumkaDatabase extends SQLiteOpenHelper {
             return false;
         }
     }
+
+    public static class SavedMessage {
+        public long did;
+        public int mid;
+        public int date;
+        public String text;
+        public boolean deleted;
+    }
+
+    public ArrayList<SavedMessage> getDeletedMessages(int limit) {
+        ArrayList<SavedMessage> result = new ArrayList<>();
+        try {
+            SQLiteDatabase db = getReadableDatabase();
+            Cursor c = db.rawQuery("SELECT did, mid FROM lumka_deleted_messages ORDER BY rowid DESC LIMIT ?",
+                    new String[]{String.valueOf(limit)});
+            if (c != null) {
+                while (c.moveToNext()) {
+                    SavedMessage m = new SavedMessage();
+                    m.did = c.getLong(0);
+                    m.mid = c.getInt(1);
+                    m.deleted = true;
+                    result.add(m);
+                }
+                c.close();
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return result;
+    }
+
+    public ArrayList<SavedMessage> getEditedMessages(int limit) {
+        ArrayList<SavedMessage> result = new ArrayList<>();
+        try {
+            SQLiteDatabase db = getReadableDatabase();
+            Cursor c = db.rawQuery("SELECT did, mid, date, text FROM lumka_edited_messages ORDER BY id DESC LIMIT ?",
+                    new String[]{String.valueOf(limit)});
+            if (c != null) {
+                while (c.moveToNext()) {
+                    SavedMessage m = new SavedMessage();
+                    m.did = c.getLong(0);
+                    m.mid = c.getInt(1);
+                    m.date = c.getInt(2);
+                    m.text = c.getString(3);
+                    result.add(m);
+                }
+                c.close();
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return result;
+    }
+
+    public void clearDeletedMessages() {
+        try {
+            getWritableDatabase().delete("lumka_deleted_messages", null, null);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
+    public void clearEditedMessages() {
+        try {
+            getWritableDatabase().delete("lumka_edited_messages", null, null);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
 }

@@ -21,6 +21,12 @@ public class LumkaConfig {
     public static boolean confirmCall = true;
     public static boolean confirmSendStickerOrGif = true;
 
+    // Privacy
+    public static boolean blockScreenshots = false;
+
+    // Appearance
+    public static boolean hideDialogsAvatars = false;
+
     private static boolean loaded = false;
 
     static {
@@ -43,6 +49,10 @@ public class LumkaConfig {
         allowCopyRestricted = prefs.getBoolean("allowCopyRestricted", true);
         confirmCall = prefs.getBoolean("confirmCall", true);
         confirmSendStickerOrGif = prefs.getBoolean("confirmSendStickerOrGif", true);
+
+        blockScreenshots = prefs.getBoolean("blockScreenshots", false);
+
+        hideDialogsAvatars = prefs.getBoolean("hideDialogsAvatars", false);
 
         loaded = true;
     }
@@ -79,6 +89,12 @@ public class LumkaConfig {
                 break;
             case "confirmSendStickerOrGif":
                 confirmSendStickerOrGif = value;
+                break;
+            case "blockScreenshots":
+                blockScreenshots = value;
+                break;
+            case "hideDialogsAvatars":
+                hideDialogsAvatars = value;
                 break;
         }
     }

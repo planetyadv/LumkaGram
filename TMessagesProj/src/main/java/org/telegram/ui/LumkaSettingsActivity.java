@@ -56,6 +56,10 @@ public class LumkaSettingsActivity extends BaseFragment {
             return new Item(1, title, subtitle, key, checked);
         }
 
+        static Item button(String title, String key) {
+            return new Item(3, title, null, key, false);
+        }
+
         static Item shadow() {
             return new Item(2, null, null, null, false);
         }
@@ -85,6 +89,7 @@ public class LumkaSettingsActivity extends BaseFragment {
         allItems.add(Item.header("Удалённые и изменённые сообщения"));
         allItems.add(Item.check("Сохранять удалённые сообщения", "Удалённые собеседником сообщения останутся с пометкой 🗑", "saveDeletedMessages", LumkaConfig.saveDeletedMessages));
         allItems.add(Item.check("Сохранять историю изменений", "Хранить предыдущие версии изменённых сообщений", "saveEditedMessages", LumkaConfig.saveEditedMessages));
+        allItems.add(Item.button("Открыть сохранённые сообщения", "openSaved"));
         allItems.add(Item.shadow());
 
         // 3. Chat Conveniences
@@ -92,6 +97,16 @@ public class LumkaSettingsActivity extends BaseFragment {
         allItems.add(Item.check("Копирование из закрытых каналов", "Разрешить выделение и копирование из каналов с запретом копирования", "allowCopyRestricted", LumkaConfig.allowCopyRestricted));
         allItems.add(Item.check("Подтверждение перед звонком", "Спрашивать подтверждение перед началом аудио/видеозвонка", "confirmCall", LumkaConfig.confirmCall));
         allItems.add(Item.check("Подтверждение стикеров и GIF", "Спрашивать подтверждение перед отправкой стикера или анимации", "confirmSendStickerOrGif", LumkaConfig.confirmSendStickerOrGif));
+        allItems.add(Item.shadow());
+
+        // 4. Privacy
+        allItems.add(Item.header("Приватность"));
+        allItems.add(Item.check("Запрет скриншотов", "Блокировать скриншоты и запись экрана во всём приложении", "blockScreenshots", LumkaConfig.blockScreenshots));
+        allItems.add(Item.shadow());
+
+        // 5. Appearance
+        allItems.add(Item.header("Внешний вид"));
+        allItems.add(Item.check("Скрывать аватарки в списке чатов", "Показывать список чатов без аватарок", "hideDialogsAvatars", LumkaConfig.hideDialogsAvatars));
         allItems.add(Item.shadow());
 
         filterItems("");
@@ -104,7 +119,7 @@ public class LumkaSettingsActivity extends BaseFragment {
         } else {
             String q = query.toLowerCase(Locale.ROOT).trim();
             for (Item item : allItems) {
-                if (item.type == 1) {
+                if (item.type == 1 || item.type == 3) {
                     if ((item.title != null && item.title.toLowerCase(Locale.ROOT).contains(q)) ||
                         (item.subtitle != null && item.subtitle.toLowerCase(Locale.ROOT).contains(q))) {
                         displayedItems.add(item);
@@ -170,8 +185,19 @@ public class LumkaSettingsActivity extends BaseFragment {
             if (item.type == 1) {
                 item.checked = !item.checked;
                 LumkaConfig.toggle(item.key, item.checked);
+                if ("blockScreenshots".equals(item.key) && getParentActivity() != null) {
+                    if (item.checked) {
+                        getParentActivity().getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
+                    } else {
+                        getParentActivity().getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
+                    }
+                }
                 if (view instanceof TextCheckCell) {
                     ((TextCheckCell) view).setChecked(item.checked);
+                }
+            } else if (item.type == 3) {
+                if ("openSaved".equals(item.key)) {
+                    presentFragment(new LumkaSavedActivity());
                 }
             }
         });
@@ -203,7 +229,7 @@ public class LumkaSettingsActivity extends BaseFragment {
 
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
-            return holder.getItemViewType() == 1;
+            return holder.getItemViewType() == 1 || holder.getItemViewType() == 3;
         }
 
         @Override
@@ -220,6 +246,12 @@ public class LumkaSettingsActivity extends BaseFragment {
                     TextCheckCell checkCell = new TextCheckCell(context);
                     checkCell.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     view = checkCell;
+                    break;
+                }
+                case 3: {
+                    org.telegram.ui.Cells.TextSettingsCell settingsCell = new org.telegram.ui.Cells.TextSettingsCell(context);
+                    settingsCell.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+                    view = settingsCell;
                     break;
                 }
                 default: {
@@ -242,6 +274,11 @@ public class LumkaSettingsActivity extends BaseFragment {
                     TextCheckCell checkCell = (TextCheckCell) holder.itemView;
                     checkCell.setTextAndCheck(item.title, item.checked, position + 1 < displayedItems.size() && displayedItems.get(position + 1).type == 1);
                     break;
+                case 3: {
+                    org.telegram.ui.Cells.TextSettingsCell settingsCell = (org.telegram.ui.Cells.TextSettingsCell) holder.itemView;
+                    settingsCell.setText(item.title, position + 1 < displayedItems.size() && displayedItems.get(position + 1).type == 1);
+                    break;
+                }
             }
         }
     }
