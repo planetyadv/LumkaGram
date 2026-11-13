@@ -290,6 +290,7 @@ public class ApplicationLoader extends Application {
         // Must be the very first thing: writes any uncaught exception to Download/LumkaGram-crash.txt.
         try {
             LumkaCrashHandler.install(this);
+            LumkaCrashHandler.startHangWatchdog(this);
         } catch (Throwable ignore) {
 
         }
