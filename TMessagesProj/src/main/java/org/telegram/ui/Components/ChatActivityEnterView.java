@@ -7565,9 +7565,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (org.telegram.messenger.LumkaConfig.confirmSendStickerOrGif && parentActivity != null) {
             new org.telegram.ui.ActionBar.AlertDialog.Builder(parentActivity)
                     .setTitle("LumkaGram")
-                    .setMessage("ŒÚÔ‡‚ËÚ¸ ÒÚËÍÂ / GIF?")
-                    .setPositiveButton("ŒÚÔ‡‚ËÚ¸", (dialog, which) -> { if (onConfirmed != null) onConfirmed.run(); })
-                    .setNegativeButton("ŒÚÏÂÌ‡", null)
+                    .setMessage("–û—Ç–ø—Ä–∞–≤–∏—Ç—å —Å—Ç–∏–∫–µ—Ä / GIF?")
+                    .setPositiveButton("–û—Ç–ø—Ä–∞–≤–∏—Ç—å", (dialog, which) -> { if (onConfirmed != null) onConfirmed.run(); })
+                    .setNegativeButton("–û—Ç–º–µ–Ω–∞", null)
                     .show();
             return true;
         }
