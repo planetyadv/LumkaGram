@@ -3977,11 +3977,11 @@ public class Theme {
         SharedPreferences themeConfig = ApplicationLoader.applicationContext.getSharedPreferences("themeconfig", Activity.MODE_PRIVATE);
 
         ThemeInfo themeInfo = new ThemeInfo();
-        themeInfo.name = "Lumka Mint";
+        themeInfo.name = "Blue";
         themeInfo.assetName = "bluebubbles.attheme";
-        themeInfo.previewBackgroundColor = 0xff6fffcc;
+        themeInfo.previewBackgroundColor = 0xffd5e8f3;
         themeInfo.previewInColor = 0xffffffff;
-        themeInfo.previewOutColor = 0xffd6faea;
+        themeInfo.previewOutColor = 0xffd5efcc;
         themeInfo.firstAccentIsDefault = true;
         themeInfo.currentAccentId = DEFALT_THEME_ACCENT_ID;
         themeInfo.sortIndex = 1;
@@ -9830,13 +9830,7 @@ public class Theme {
     }
 
     public static Drawable createDefaultWallpaper(int w, int h) {
-        try {
-            if (ApplicationLoader.applicationContext != null) {
-                Drawable d = ApplicationLoader.applicationContext.getResources().getDrawable(R.drawable.lumka_wallpaper);
-                if (d != null) return d;
-            }
-        } catch (Throwable ignore) {}
-        MotionBackgroundDrawable motionBackgroundDrawable = new MotionBackgroundDrawable(0xff6fffcc, 0xff3effbc, 0xff9bffdd, 0xff6bffcb, w != 0);
+        MotionBackgroundDrawable motionBackgroundDrawable = new MotionBackgroundDrawable(0xffd5e8f3, 0xffc2dcf0, 0xfff0f9ff, 0xffe8f4fb, w != 0);
         if (w <= 0 || h <= 0) {
             w = Math.min(AndroidUtilities.displaySize.x, AndroidUtilities.displaySize.y);
             h = Math.max(AndroidUtilities.displaySize.x, AndroidUtilities.displaySize.y);
