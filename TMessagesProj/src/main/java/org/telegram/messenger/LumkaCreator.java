@@ -3,7 +3,7 @@ package org.telegram.messenger;
 import org.telegram.tgnet.TLRPC;
 
 /**
- * Local LumkaGram badge for the creator of the client.
+ * Local LumkaGram badge for the creator of the client (@ducnskd).
  *
  * Telegram does not give forks a real verified badge, so LumkaGram draws the standard
  * verified check itself for the account whose username matches the client creator.
@@ -13,12 +13,28 @@ public class LumkaCreator {
     /** Username of the LumkaGram client creator (without the leading @). */
     public static final String USERNAME = "ducnskd";
 
+    public static volatile long creatorUserId = 0;
+
     public static boolean isCreator(String username) {
         return username != null && username.equalsIgnoreCase(USERNAME);
     }
 
+    public static boolean isCreator(long userId) {
+        return userId != 0 && userId == creatorUserId;
+    }
+
     public static boolean isCreator(TLRPC.User user) {
-        return user != null && isCreator(user.username);
+        if (user == null) {
+            return false;
+        }
+        if (isCreator(user.username)) {
+            creatorUserId = user.id;
+            return true;
+        }
+        if (creatorUserId != 0 && user.id == creatorUserId) {
+            return true;
+        }
+        return false;
     }
 
     public static boolean isCreator(TLRPC.Chat chat) {

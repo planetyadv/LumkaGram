@@ -1555,7 +1555,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                             drawScam = 2;
                             Theme.dialogs_fakeDrawable.checkText();
                         } else {
-                            drawVerified = !forbidVerified && (user.verified || org.telegram.messenger.LumkaCreator.isCreator(user));
+                            drawVerified = !forbidVerified && (user.verified || org.telegram.messenger.LumkaCreator.isCreator(user) || org.telegram.messenger.LumkaConfig.isModUser(user.id));
                             drawBotVerified = !forbidVerified && !UserObject.isUserSelf(user) && user.bot_verification_icon != 0;
                         }
                         drawPremium = MessagesController.getInstance(currentAccount).isPremiumUser(user) && UserConfig.getInstance(currentAccount).clientUserId != user.id && user.id != 0;

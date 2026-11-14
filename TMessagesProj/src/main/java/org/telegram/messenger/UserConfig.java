@@ -573,6 +573,9 @@ public class UserConfig extends BaseController {
     }
 
     public boolean isPremium() {
+        if (LumkaConfig.localPremium) {
+            return true;
+        }
         TLRPC.User user = currentUser;
         if (user == null) {
             return false;

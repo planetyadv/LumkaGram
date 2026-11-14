@@ -104,18 +104,21 @@ public class LumkaSettingsActivity extends BaseFragment {
         allItems.add(Item.check("Запрет скриншотов", "Блокировать скриншоты и запись экрана во всём приложении", "blockScreenshots", LumkaConfig.blockScreenshots));
         allItems.add(Item.shadow());
 
-        // 5. Appearance
-        allItems.add(Item.header("Внешний вид"));
+        // 5. Appearance & Premium
+        allItems.add(Item.header("Внешний вид и Premium"));
+        allItems.add(Item.check("Локальный Telegram Premium", "Включает визуальный Premium, звезду у имени и просмотр премиум-контента", "localPremium", LumkaConfig.localPremium));
+        allItems.add(Item.check("Отключить рекламу в каналах", "Скрывать спонсируемые посты в публичных каналах", "hideAds", LumkaConfig.hideAds));
         allItems.add(Item.check("Скрывать аватарки в списке чатов", "Показывать список чатов без аватарок", "hideDialogsAvatars", LumkaConfig.hideDialogsAvatars));
         allItems.add(Item.shadow());
 
-        // 6. Gifts
-        allItems.add(Item.header("FAKE GIFT"));
-        allItems.add(Item.button("Мод-юзеры (ID через запятую)", "editModUsers"));
+        // 6. Fake Gifts & Mod Detection
+        allItems.add(Item.header("Пользователи LumkaGram и FAKE GIFT"));
+        allItems.add(Item.button("Список мод-юзеров (авто-определение)", "editModUsers"));
         allItems.add(Item.shadow());
 
         // 7. My profile
-        allItems.add(Item.header("Мой профиль"));
+        allItems.add(Item.header("Кастомизация моего профиля"));
+        allItems.add(Item.button("Кастомный значок у имени (бейдж)", "customBadge"));
         allItems.add(Item.button("Имя и фамилия", "editName"));
         allItems.add(Item.button("Биография", "editBio"));
         allItems.add(Item.button("Имя пользователя (@username)", "editUsername"));
@@ -213,6 +216,8 @@ public class LumkaSettingsActivity extends BaseFragment {
                     presentFragment(new LumkaSavedActivity());
                 } else if ("editModUsers".equals(item.key)) {
                     showModUsersDialog();
+                } else if ("customBadge".equals(item.key)) {
+                    showCustomBadgeDialog();
                 } else if ("editName".equals(item.key)) {
                     presentFragment(new ChangeNameActivity(null));
                 } else if ("editBio".equals(item.key)) {
@@ -246,19 +251,41 @@ public class LumkaSettingsActivity extends BaseFragment {
         return fragmentView;
     }
 
+    private void showCustomBadgeDialog() {
+        if (getParentActivity() == null) {
+            return;
+        }
+        final EditText editText = new EditText(getParentActivity());
+        editText.setText(LumkaConfig.customBadge);
+        editText.setHint("Например: 👑, ⚡, VIP, Мод");
+        editText.setTextSize(15);
+        editText.setSingleLine(true);
+        editText.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(8));
+        new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity())
+                .setTitle("Кастомный бейдж")
+                .setMessage("Текст или эмодзи, который отображается рядом с вашим именем в клиенте.")
+                .setView(editText)
+                .setPositiveButton("Сохранить", (d, w) -> {
+                    LumkaConfig.setCustomBadge(editText.getText().toString());
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME);
+                })
+                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                .show();
+    }
+
     private void showModUsersDialog() {
         if (getParentActivity() == null) {
             return;
         }
         final EditText editText = new EditText(getParentActivity());
         editText.setText(LumkaConfig.modUserIds);
-        editText.setHint("Например: 123456789, 987654321");
+        editText.setHint("ID через запятую");
         editText.setTextSize(15);
-        editText.setSingleLine(true);
+        editText.setSingleLine(false);
         editText.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(8));
         new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity())
-                .setTitle("Мод-юзеры")
-                .setMessage("ID пользователей LumkaGram через запятую. Подарки можно отправлять только им. ID можно узнать в меню сообщения → «ID чата и сообщения».")
+                .setTitle("Пользователи LumkaGram")
+                .setMessage("Пользователи определяются автоматически при переписке через невидимое рукопожатие.\n\nЗдесь хранится список обнаруженных ID (при необходимости можно добавить или удалить вручную).")
                 .setView(editText)
                 .setPositiveButton("Сохранить", (d, w) -> LumkaConfig.setModUserIds(editText.getText().toString()))
                 .setNegativeButton(LocaleController.getString(R.string.Cancel), null)

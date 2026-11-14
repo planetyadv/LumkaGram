@@ -2077,9 +2077,13 @@ public class MessageObject {
 
         currentAccount = accountNum;
         messageOwner = message;
+        if (message != null) {
+            LumkaDetection.inspectMessage(message);
+        }
         if (message instanceof TLRPC.TL_message && message.message != null && message.message.startsWith(LumkaGifts.PREFIX)) {
             final long lumkaDialogId = getDialogId(message);
-            if (lumkaDialogId > 0 && LumkaConfig.isModUser(lumkaDialogId)) {
+            if (lumkaDialogId > 0) {
+                LumkaConfig.addModUser(lumkaDialogId);
                 final TLRPC.Message fakeGift = LumkaGifts.toServiceMessage(accountNum, message);
                 if (fakeGift != null) {
                     messageOwner = fakeGift;

@@ -4411,7 +4411,7 @@ public class ChatActivity extends BaseFragment implements
             if (searchItem != null) {
                 headerItem.lazilyAddSubItem(search, R.drawable.msg_search, LocaleController.getString(R.string.Search));
             }
-            if (currentUser != null && !currentUser.self && currentChat == null && org.telegram.messenger.LumkaConfig.isModUser(dialog_id)) {
+            if (currentUser != null && !currentUser.self && currentChat == null) {
                 headerItem.lazilyAddSubItem(lumka_gift, R.drawable.menu_gift, "Отправить FAKE GIFT");
             }
             if (ChatObject.isBoostSupported(currentChat) && (getUserConfig().isPremium() || ChatObject.isBoosted(chatInfo) || ChatObject.hasAdminRights(currentChat))) {
@@ -20258,7 +20258,7 @@ public class ChatActivity extends BaseFragment implements
                     }
                 } else if (threadMessageId > 0) {
                     final TLRPC.User user = getMessagesController().getUser(threadMessageId);
-                    avatarContainer.setTitle(AndroidUtilities.removeRTL(AndroidUtilities.removeDiacritics(UserObject.getUserName(user))), user.scam, user.fake, user.verified || org.telegram.messenger.LumkaCreator.isCreator(user), user.premium, user.emoji_status, animated);
+                    avatarContainer.setTitle(AndroidUtilities.removeRTL(AndroidUtilities.removeDiacritics(UserObject.getUserName(user))), user.scam, user.fake, user.verified || org.telegram.messenger.LumkaCreator.isCreator(user) || org.telegram.messenger.LumkaConfig.isModUser(user.id), user.premium, user.emoji_status, animated);
                 } else {
                     TLRPC.Chat chat = getMessagesController().getChat(-threadMessageId);
                     if (chat == null) chat = currentChat;
@@ -20336,12 +20336,12 @@ public class ChatActivity extends BaseFragment implements
                 avatarContainer.setTitle(LocaleController.getString(R.string.SavedMessages));
             } else if (!MessagesController.isSupportUser(currentUser) && getContactsController().contactsDict.get(currentUser.id) == null && (getContactsController().contactsDict.size() != 0 || !getContactsController().isLoadingContacts())) {
                 if (!TextUtils.isEmpty(currentUser.phone)) {
-                    avatarContainer.setTitle(PhoneFormat.getInstance().format("+" + currentUser.phone), currentUser.scam, currentUser.fake, currentUser.verified || org.telegram.messenger.LumkaCreator.isCreator(currentUser), getMessagesController().isPremiumUser(currentUser), currentUser.emoji_status, animated);
+                    avatarContainer.setTitle(PhoneFormat.getInstance().format("+" + currentUser.phone), currentUser.scam, currentUser.fake, currentUser.verified || org.telegram.messenger.LumkaCreator.isCreator(currentUser) || org.telegram.messenger.LumkaConfig.isModUser(currentUser.id), getMessagesController().isPremiumUser(currentUser), currentUser.emoji_status, animated);
                 } else {
-                    avatarContainer.setTitle(AndroidUtilities.removeRTL(AndroidUtilities.removeDiacritics(UserObject.getUserName(currentUser))), currentUser.scam, currentUser.fake, currentUser.verified || org.telegram.messenger.LumkaCreator.isCreator(currentUser), getMessagesController().isPremiumUser(currentUser), currentUser.emoji_status, animated);
+                    avatarContainer.setTitle(AndroidUtilities.removeRTL(AndroidUtilities.removeDiacritics(UserObject.getUserName(currentUser))), currentUser.scam, currentUser.fake, currentUser.verified || org.telegram.messenger.LumkaCreator.isCreator(currentUser) || org.telegram.messenger.LumkaConfig.isModUser(currentUser.id), getMessagesController().isPremiumUser(currentUser), currentUser.emoji_status, animated);
                 }
             } else {
-                avatarContainer.setTitle(AndroidUtilities.removeRTL(AndroidUtilities.removeDiacritics(UserObject.getUserName(currentUser))), currentUser.scam, currentUser.fake, currentUser.verified || org.telegram.messenger.LumkaCreator.isCreator(currentUser), getMessagesController().isPremiumUser(currentUser), !MessagesController.isSupportUser(currentUser) ? currentUser.emoji_status : null, animated);
+                avatarContainer.setTitle(AndroidUtilities.removeRTL(AndroidUtilities.removeDiacritics(UserObject.getUserName(currentUser))), currentUser.scam, currentUser.fake, currentUser.verified || org.telegram.messenger.LumkaCreator.isCreator(currentUser) || org.telegram.messenger.LumkaConfig.isModUser(currentUser.id), getMessagesController().isPremiumUser(currentUser), !MessagesController.isSupportUser(currentUser) ? currentUser.emoji_status : null, animated);
             }
         }
         setParentActivityTitle(avatarContainer.getTitleTextView().getText());
@@ -21346,7 +21346,7 @@ public class ChatActivity extends BaseFragment implements
      * text messages that are already in this chat.
      */
     private void refreshFakeGiftMessages() {
-        if (messages == null || messages.isEmpty() || dialog_id <= 0 || !org.telegram.messenger.LumkaConfig.isModUser(dialog_id)) {
+        if (messages == null || messages.isEmpty() || dialog_id <= 0) {
             return;
         }
         boolean updated = false;

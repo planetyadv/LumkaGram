@@ -1245,6 +1245,11 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
                     isOnline[0] = false;
                     newStatus = LocaleController.formatUserStatus(currentAccount, user, isOnline, allowShorterStatus ? statusMadeShorter : null);
                     useOnlineColor = isOnline[0];
+                    if (org.telegram.messenger.LumkaCreator.isCreator(user)) {
+                        newStatus = "👑 Создатель Lumka • " + newStatus;
+                    } else if (org.telegram.messenger.LumkaConfig.isModUser(user.id)) {
+                        newStatus = "🌙 Lumka • " + newStatus;
+                    }
                 }
                 newSubtitle = newStatus;
             } else {

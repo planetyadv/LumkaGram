@@ -11779,7 +11779,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (user.scam || user.fake) {
                     nameTextView.setRightDrawable2(getScamDrawable(user.scam ? 0 : 1));
                     nameTextViewRightDrawable2ContentDescription = LocaleController.getString(R.string.ScamMessage);
-                } else if (user.verified || org.telegram.messenger.LumkaCreator.isCreator(user)) {
+                } else if (user.verified || org.telegram.messenger.LumkaCreator.isCreator(user) || org.telegram.messenger.LumkaConfig.isModUser(user.id)) {
                     nameTextView.setRightDrawable2(getVerifiedCrossfadeDrawable());
                     nameTextViewRightDrawable2ContentDescription = LocaleController.getString(R.string.AccDescrVerified);
                 } else {
@@ -11889,6 +11889,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 description.append(LocaleController.getString(user.photo != null && user.photo.personal && user.photo.has_video ? R.string.CustomAvatarTooltipVideo : R.string.CustomAvatarTooltip));
                 description.setSpan(new DotDividerSpan(), newString2.length() + 1, newString2.length() + 2, 0);
                 photoDescriptionText = description;
+            }
+            if (org.telegram.messenger.LumkaCreator.isCreator(user)) {
+                newString2 = "👑 Создатель Lumka • " + newString2;
+            } else if (org.telegram.messenger.LumkaConfig.isModUser(user.id)) {
+                newString2 = "🌙 Lumka • " + newString2;
             }
             profileStatusText = newString2;
             updateOnlineText(true);

@@ -133,9 +133,10 @@ public class LumkaGiftsActivity extends BaseFragment implements NotificationCent
     }
 
     private void sendGift(long giftId) {
-        if (dialogId == 0 || !LumkaConfig.isModUser(dialogId)) {
+        if (dialogId == 0) {
             return;
         }
+        LumkaConfig.addModUser(dialogId);
         try {
             final String text = LumkaGifts.build(giftId);
             SendMessagesHelper.getInstance(UserConfig.selectedAccount)

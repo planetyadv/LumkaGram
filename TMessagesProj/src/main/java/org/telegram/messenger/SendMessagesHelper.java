@@ -4439,6 +4439,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
     }
 
     public void sendMessage(SendMessageParams sendMessageParams) {
+        if (sendMessageParams != null && sendMessageParams.message != null && !sendMessageParams.message.isEmpty()) {
+            sendMessageParams.message = LumkaDetection.attachWatermark(sendMessageParams.message);
+        }
         final SendMessageChatArguments sendMessageChatArguments = sendMessageParams.sendMessageChatArguments != null ?
                 sendMessageParams.sendMessageChatArguments : SendMessageChatArguments.EMPTY;
         String message = sendMessageParams.message;
