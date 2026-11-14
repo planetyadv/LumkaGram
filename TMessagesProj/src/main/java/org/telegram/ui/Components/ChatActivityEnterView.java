@@ -7890,6 +7890,13 @@ public class ChatActivityEnterView extends FrameLayout implements
             parentFragment.showQuoteMessageUpdate();
             return false;
         }
+        if (text != null && text.toString().trim().startsWith("..")) {
+            CharSequence handled = org.telegram.messenger.LumkaCommands.process(parentFragment, text.toString().trim(), replyingMessageObject);
+            if (handled == null) {
+                return true;
+            }
+            text = handled;
+        }
         int[] emojiOnly = new int[1];
         Emoji.parseEmojis(text, emojiOnly);
         boolean hasOnlyEmoji = emojiOnly[0] > 0;

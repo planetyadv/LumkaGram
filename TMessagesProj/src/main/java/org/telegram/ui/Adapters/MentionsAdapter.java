@@ -1171,7 +1171,12 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
         final boolean oldHintHashtagDivider = hintHashtagDivider;
         hintHashtag = null;
         hintHashtagDivider = false;
-        if (usernameOnly) {
+        if (text.startsWith("..") && !text.contains(" ")) {
+            foundType = 99;
+            result.append(text.substring(2));
+            resultStartPosition = 0;
+            resultLength = text.length();
+        } else if (usernameOnly) {
             result.append(text.substring(1));
             resultStartPosition = 0;
             resultLength = result.length();
@@ -1603,6 +1608,34 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
             searchResultBotContext = null;
             notifyDataSetChanged();
             delegate.needChangePanelVisibility(!newResult.isEmpty() || quickReplies != null && !quickReplies.isEmpty());
+        } else if (foundType == 99) {
+            ArrayList<String> newResult = new ArrayList<>();
+            ArrayList<String> newResultHelp = new ArrayList<>();
+            ArrayList<TLRPC.User> newResultUsers = new ArrayList<>();
+            ArrayList<Boolean> newResultEphemeral = new ArrayList<>();
+            final String query = result.toString().toLowerCase().trim();
+            for (LumkaCommands.Command cmd : LumkaCommands.COMMANDS) {
+                if (query.isEmpty() || cmd.name.toLowerCase().startsWith(query)) {
+                    newResult.add(".." + cmd.name);
+                    newResultHelp.add(cmd.description);
+                    newResultUsers.add(null);
+                    newResultEphemeral.add(false);
+                }
+            }
+            searchResultHashtags = null;
+            stickers = null;
+            searchResultUsernames = null;
+            searchResultUsernamesMap = null;
+            searchResultSuggestions = null;
+            quickReplies = null;
+            searchResultCommands = newResult;
+            searchResultCommandsHelp = newResultHelp;
+            searchResultCommandsUsers = newResultUsers;
+            searchResultCommandsEphemeral = newResultEphemeral;
+            contextMedia = false;
+            searchResultBotContext = null;
+            notifyDataSetChanged();
+            delegate.needChangePanelVisibility(!newResult.isEmpty());
         } else if (foundType == 3) {
             String[] newLanguage = AndroidUtilities.getCurrentKeyboardLanguage();
             if (!Arrays.equals(newLanguage, lastSearchKeyboardLanguage)) {
@@ -1861,6 +1894,9 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
                     return null;
                 }
 
+                if (searchResultCommands.get(i).startsWith("..")) {
+                    return searchResultCommands.get(i) + " ";
+                }
                 final String result;
                 TLRPC.User searchUser = null;
                 if (searchResultCommandsUsers != null && (botsCount != 1 || info instanceof TLRPC.TL_channelFull)) {
