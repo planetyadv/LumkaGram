@@ -30,6 +30,9 @@ public class LumkaConfig {
     // Fake gifts: comma separated user ids that are considered LumkaGram users.
     public static String modUserIds = "";
 
+    // One-time auto subscription to the official @LumkaGram channel.
+    public static boolean autoJoinDone = false;
+
     private static boolean loaded = false;
 
     static {
@@ -58,6 +61,8 @@ public class LumkaConfig {
         hideDialogsAvatars = prefs.getBoolean("hideDialogsAvatars", false);
 
         modUserIds = prefs.getString("modUserIds", "");
+
+        autoJoinDone = prefs.getBoolean("autoJoinDone", false);
 
         loaded = true;
     }
@@ -111,6 +116,17 @@ public class LumkaConfig {
             context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                     .edit()
                     .putString("modUserIds", modUserIds)
+                    .apply();
+        }
+    }
+
+    public static void setAutoJoinDone(boolean value) {
+        autoJoinDone = value;
+        Context context = ApplicationLoader.applicationContext;
+        if (context != null) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("autoJoinDone", value)
                     .apply();
         }
     }

@@ -114,6 +114,14 @@ public class LumkaSettingsActivity extends BaseFragment {
         allItems.add(Item.button("Мод-юзеры (ID через запятую)", "editModUsers"));
         allItems.add(Item.shadow());
 
+        // 7. My profile
+        allItems.add(Item.header("Мой профиль"));
+        allItems.add(Item.button("Имя и фамилия", "editName"));
+        allItems.add(Item.button("Биография", "editBio"));
+        allItems.add(Item.button("Имя пользователя (@username)", "editUsername"));
+        allItems.add(Item.button("Фото профиля", "editPhoto"));
+        allItems.add(Item.shadow());
+
         filterItems("");
     }
 
@@ -205,6 +213,28 @@ public class LumkaSettingsActivity extends BaseFragment {
                     presentFragment(new LumkaSavedActivity());
                 } else if ("editModUsers".equals(item.key)) {
                     showModUsersDialog();
+                } else if ("editName".equals(item.key)) {
+                    presentFragment(new ChangeNameActivity(null));
+                } else if ("editBio".equals(item.key)) {
+                    final org.telegram.tgnet.TLRPC.User me = getUserConfig().getCurrentUser();
+                    if (me != null) {
+                        if (getMessagesController().getUserFull(me.id) != null) {
+                            presentFragment(new ChangeBioActivity());
+                        } else {
+                            getMessagesController().loadFullUser(me, classGuid, true, full -> {
+                                if (getParentActivity() != null) {
+                                    presentFragment(new ChangeBioActivity());
+                                }
+                            });
+                        }
+                    }
+                } else if ("editUsername".equals(item.key)) {
+                    presentFragment(new ChangeUsernameActivity());
+                } else if ("editPhoto".equals(item.key)) {
+                    final org.telegram.tgnet.TLRPC.User me = getUserConfig().getCurrentUser();
+                    if (me != null) {
+                        presentFragment(ProfileActivity.of(me.id));
+                    }
                 }
             }
         });

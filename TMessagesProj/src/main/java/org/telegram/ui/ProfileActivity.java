@@ -11779,7 +11779,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (user.scam || user.fake) {
                     nameTextView.setRightDrawable2(getScamDrawable(user.scam ? 0 : 1));
                     nameTextViewRightDrawable2ContentDescription = LocaleController.getString(R.string.ScamMessage);
-                } else if (user.verified) {
+                } else if (user.verified || org.telegram.messenger.LumkaCreator.isCreator(user)) {
                     nameTextView.setRightDrawable2(getVerifiedCrossfadeDrawable());
                     nameTextViewRightDrawable2ContentDescription = LocaleController.getString(R.string.AccDescrVerified);
                 } else {
@@ -12044,7 +12044,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (chat.scam || chat.fake) {
                     nameTextView.setRightDrawable2(getScamDrawable(chat.scam ? 0 : 1));
                     nameTextViewRightDrawableContentDescription = LocaleController.getString(R.string.ScamMessage);
-                } else if (chat.verified) {
+                } else if (chat.verified || org.telegram.messenger.LumkaCreator.isCreator(chat)) {
                     nameTextView.setRightDrawable2(getVerifiedCrossfadeDrawable());
                     nameTextViewRightDrawableContentDescription = LocaleController.getString(R.string.AccDescrVerified);
                 } else {
