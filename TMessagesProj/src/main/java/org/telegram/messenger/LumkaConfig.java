@@ -17,7 +17,7 @@ public class LumkaConfig {
     public static boolean ghostHideTyping = false;
 
     // Messages
-    public static boolean saveDeletedMessages = true;
+    public static boolean saveDeletedMessages = false;
     public static boolean saveEditedMessages = true;
 
     // Conveniences
@@ -57,7 +57,7 @@ public class LumkaConfig {
         ghostDontReadStories = prefs.getBoolean("ghostDontReadStories", false);
         ghostHideTyping = prefs.getBoolean("ghostHideTyping", false);
 
-        saveDeletedMessages = prefs.getBoolean("saveDeletedMessages", true);
+        saveDeletedMessages = prefs.getBoolean("saveDeletedMessages", false);
         saveEditedMessages = prefs.getBoolean("saveEditedMessages", true);
 
         allowCopyRestricted = prefs.getBoolean("allowCopyRestricted", true);

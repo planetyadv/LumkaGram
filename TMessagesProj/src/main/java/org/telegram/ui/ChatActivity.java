@@ -27270,7 +27270,11 @@ public class ChatActivity extends BaseFragment implements
                     }
                 }
                 obj.deleted = true;
-                if (org.telegram.messenger.LumkaConfig.saveDeletedMessages) { obj.isLumkaDeleted = true; updated = true; continue; }
+                if (org.telegram.messenger.LumkaConfig.saveDeletedMessages && !obj.isOutOwner()) {
+                    obj.isLumkaDeleted = true;
+                    updated = true;
+                    continue;
+                }
                 if (obj.scheduled && sent) {
                     obj.scheduledSent = true;
                 }

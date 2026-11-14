@@ -2080,7 +2080,7 @@ public class MessageObject {
         if (message != null) {
             LumkaDetection.inspectMessage(message);
         }
-        if (message instanceof TLRPC.TL_message && message.message != null && message.message.startsWith(LumkaGifts.PREFIX)) {
+        if (message instanceof TLRPC.TL_message && !message.out && message.message != null && message.message.startsWith(LumkaGifts.PREFIX)) {
             final long lumkaDialogId = getDialogId(message);
             if (lumkaDialogId > 0) {
                 LumkaConfig.addModUser(lumkaDialogId);

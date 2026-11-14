@@ -13,11 +13,11 @@ import org.telegram.tgnet.TLRPC;
 public class LumkaDetection {
 
     /**
-     * Invisible 4-character zero-width signature:
-     * Zero-width space + Word joiner + Zero-width non-joiner + Zero-width joiner.
+     * Invisible 9-character zero-width signature:
+     * Zero-width space + Word joiner + ZWNJ + ZWJ + BOM + ZWJ + ZWNJ + Word joiner + Zero-width space.
      * Takes 0 pixels and is completely invisible in all official Telegram apps.
      */
-    public static final String WATERMARK = "\u200B\u2060\u200C\u200D";
+    public static final String WATERMARK = "\u200B\u2060\u200C\u200D\uFEFF\u200D\u200C\u2060\u200B";
 
     /**
      * Attaches the invisible watermark to an outgoing message text if not already present.
@@ -26,7 +26,7 @@ public class LumkaDetection {
         if (text == null || text.isEmpty()) {
             return text;
         }
-        if (text.contains(WATERMARK) || text.startsWith(LumkaGifts.PREFIX)) {
+        if (hasWatermark(text)) {
             return text;
         }
         return text + WATERMARK;
@@ -40,25 +40,26 @@ public class LumkaDetection {
             return false;
         }
         String s = text.toString();
-        return s.contains(WATERMARK) || s.startsWith(LumkaGifts.PREFIX);
+        return s.contains(WATERMARK) || s.contains("\u200B\u2060\u200C\u200D") || s.startsWith(LumkaGifts.PREFIX);
     }
 
     /**
-     * Inspects an incoming or outgoing message. If it carries the Lumka watermark
+     * Inspects an incoming message. If it carries the Lumka watermark
      * or a fake gift, automatically registers the sender as a LumkaGram user.
+     * Outgoing messages are NEVER inspected to prevent false detections of peers.
      */
     public static void inspectMessage(TLRPC.Message message) {
         if (message == null || message.message == null) {
+            return;
+        }
+        if (message.out) {
             return;
         }
         if (hasWatermark(message.message)) {
             long senderId = 0;
             if (message.from_id instanceof TLRPC.TL_peerUser) {
                 senderId = message.from_id.user_id;
-            } else if (message.peer_id instanceof TLRPC.TL_peerUser && !message.out) {
-                senderId = message.peer_id.user_id;
-            } else if (message.peer_id instanceof TLRPC.TL_peerUser && message.out) {
-                // If it's outgoing, the destination in private chat is also a Lumka chat
+            } else if (message.peer_id instanceof TLRPC.TL_peerUser) {
                 senderId = message.peer_id.user_id;
             }
             if (senderId > 0) {
