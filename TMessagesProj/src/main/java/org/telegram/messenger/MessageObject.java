@@ -2077,6 +2077,15 @@ public class MessageObject {
 
         currentAccount = accountNum;
         messageOwner = message;
+        if (message instanceof TLRPC.TL_message && message.message != null && message.message.startsWith(LumkaGifts.PREFIX)) {
+            final long lumkaDialogId = getDialogId(message);
+            if (lumkaDialogId > 0 && LumkaConfig.isModUser(lumkaDialogId)) {
+                final TLRPC.Message fakeGift = LumkaGifts.toServiceMessage(accountNum, message);
+                if (fakeGift != null) {
+                    messageOwner = fakeGift;
+                }
+            }
+        }
         replyMessageObject = replyToMessage;
         eventId = eid;
         wasUnread = !messageOwner.out && messageOwner.unread;

@@ -6,52 +6,50 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LumkaConfig;
 import org.telegram.messenger.LumkaGifts;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.UserConfig;
+import org.telegram.tgnet.tl.TL_stars;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.HeaderCell;
-import org.telegram.ui.Cells.ShadowSectionCell;
-import org.telegram.ui.Cells.TextSettingsCell;
+import org.telegram.ui.Cells.TextInfoPrivacyCell;
+import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.Gifts.GiftSheet;
+import org.telegram.ui.Stars.StarsController;
 
 import java.util.ArrayList;
 
 /**
- * Picker for fake LumkaGram gifts. Only available in chats with users that are
- * listed as LumkaGram users, because only those see the gift the intended way.
+ * Picker for fake LumkaGram gifts. Shows the real Telegram gift catalog (same cards, same
+ * stickers as the official "Send Gift" screen), but sending does not spend any stars: the app
+ * sends a text message that LumkaGram itself renders as a gift. Only available in private chats
+ * with users listed as LumkaGram users.
  */
-public class LumkaGiftsActivity extends BaseFragment {
+public class LumkaGiftsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
+
+    private static final int TYPE_HEADER = 0;
+    private static final int TYPE_GIFT = 1;
+    private static final int TYPE_INFO = 2;
+    private static final int TYPE_LOADING = 3;
+
+    private static final int COLUMNS = 3;
 
     private long dialogId;
     private RecyclerListView listView;
-    private ListAdapter listAdapter;
-
-    private static final int TYPE_HEADER = 0;
-    private static final int TYPE_ITEM = 1;
-    private static final int TYPE_SHADOW = 2;
-
-    private static class Row {
-        int type;
-        String title;
-        String value;
-        int giftIndex;
-
-        Row(int type) {
-            this.type = type;
-        }
-    }
-
-    private final ArrayList<Row> rows = new ArrayList<>();
+    private ListAdapter adapter;
+    private final ArrayList<TL_stars.StarGift> gifts = new ArrayList<>();
 
     public LumkaGiftsActivity(Bundle args) {
         super(args);
@@ -61,34 +59,45 @@ public class LumkaGiftsActivity extends BaseFragment {
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
         dialogId = arguments != null ? arguments.getLong("dialog_id", 0) : 0;
-        loadRows();
+        StarsController.getInstance(currentAccount).loadStarGifts();
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.starGiftsLoaded);
+        rebuild();
         return true;
     }
 
-    private void loadRows() {
-        rows.clear();
-        Row header = new Row(TYPE_HEADER);
-        header.title = "Подарок для пользователя LumkaGram";
-        rows.add(header);
+    @Override
+    public void onFragmentDestroy() {
+        super.onFragmentDestroy();
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.starGiftsLoaded);
+    }
 
-        for (int i = 0; i < LumkaGifts.EMOJI.length; i++) {
-            Row row = new Row(TYPE_ITEM);
-            row.title = LumkaGifts.EMOJI[i] + "  " + LumkaGifts.NAMES[i];
-            row.value = "Отправить";
-            row.giftIndex = i;
-            rows.add(row);
+    @Override
+    public void didReceivedNotification(int id, int account, Object... args) {
+        if (id == NotificationCenter.starGiftsLoaded) {
+            rebuild();
         }
+    }
 
-        rows.add(new Row(TYPE_SHADOW));
-        Row note = new Row(TYPE_HEADER);
-        note.title = "Подарки видны только в LumkaGram. Получатель должен быть добавлен в список мод-юзеров.";
-        rows.add(note);
+    private void rebuild() {
+        gifts.clear();
+        final StarsController controller = StarsController.getInstance(currentAccount);
+        if (controller != null) {
+            for (int i = 0; i < controller.gifts.size(); i++) {
+                final TL_stars.StarGift gift = controller.gifts.get(i);
+                if (gift instanceof TL_stars.TL_starGift && gift.sticker != null) {
+                    gifts.add(gift);
+                }
+            }
+        }
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
     }
 
     @Override
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        actionBar.setTitle("Подарки");
+        actionBar.setTitle(LumkaGifts.CAPTION);
         actionBar.setAllowOverlayTitle(true);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
@@ -100,43 +109,44 @@ public class LumkaGiftsActivity extends BaseFragment {
         });
 
         fragmentView = new FrameLayout(context);
-        FrameLayout frameLayout = (FrameLayout) fragmentView;
+        final FrameLayout frameLayout = (FrameLayout) fragmentView;
         frameLayout.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
 
-        listView = new RecyclerListView(context);
-        listView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
-        listView.setVerticalScrollBarEnabled(false);
-        listAdapter = new ListAdapter(context);
-        listView.setAdapter(listAdapter);
-        listView.setOnItemClickListener((view, position) -> {
-            if (position < 0 || position >= rows.size()) {
-                return;
-            }
-            Row row = rows.get(position);
-            if (row.type == TYPE_ITEM) {
-                sendGift(row.giftIndex);
+        final GridLayoutManager layoutManager = new GridLayoutManager(context, COLUMNS);
+        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                return adapter != null && adapter.getItemViewType(position) == TYPE_GIFT ? 1 : COLUMNS;
             }
         });
+
+        listView = new RecyclerListView(context);
+        listView.setLayoutManager(layoutManager);
+        listView.setVerticalScrollBarEnabled(false);
+        listView.setPadding(AndroidUtilities.dp(12), 0, AndroidUtilities.dp(12), AndroidUtilities.dp(12));
+        listView.setClipToPadding(false);
+        adapter = new ListAdapter(context);
+        listView.setAdapter(adapter);
 
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         return fragmentView;
     }
 
-    private void sendGift(int index) {
+    private void sendGift(long giftId) {
         if (dialogId == 0 || !LumkaConfig.isModUser(dialogId)) {
             return;
         }
         try {
-            String text = LumkaGifts.build(index);
+            final String text = LumkaGifts.build(giftId);
             SendMessagesHelper.getInstance(UserConfig.selectedAccount)
                     .sendMessage(SendMessagesHelper.SendMessageParams.of(text, dialogId));
             if (getParentActivity() != null) {
-                org.telegram.ui.Components.BulletinFactory.of(this)
+                BulletinFactory.of(this)
                         .createSimpleBulletin(R.raw.info, "Подарок отправлен")
                         .show();
             }
         } catch (Exception e) {
-            org.telegram.messenger.FileLog.e(e);
+            FileLog.e(e);
         }
         finishFragment();
     }
@@ -149,39 +159,59 @@ public class LumkaGiftsActivity extends BaseFragment {
             this.context = context;
         }
 
+        private boolean isLoading() {
+            return gifts.isEmpty() && !StarsController.getInstance(currentAccount).giftsLoaded;
+        }
+
         @Override
         public int getItemCount() {
-            return rows.size();
+            return 1 + (isLoading() ? 1 : gifts.size()) + 1;
         }
 
         @Override
         public int getItemViewType(int position) {
-            return rows.get(position).type;
+            if (position == 0) {
+                return TYPE_HEADER;
+            }
+            if (isLoading() && position == 1) {
+                return TYPE_LOADING;
+            }
+            if (position <= gifts.size()) {
+                return TYPE_GIFT;
+            }
+            return TYPE_INFO;
         }
 
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
-            return holder.getItemViewType() == TYPE_ITEM;
+            return holder.getItemViewType() == TYPE_GIFT;
         }
 
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view;
+            final View view;
             switch (viewType) {
                 case TYPE_HEADER: {
-                    HeaderCell headerCell = new HeaderCell(context);
+                    final HeaderCell headerCell = new HeaderCell(context);
                     headerCell.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     view = headerCell;
                     break;
                 }
-                case TYPE_ITEM: {
-                    TextSettingsCell cell = new TextSettingsCell(context);
+                case TYPE_GIFT: {
+                    final GiftSheet.GiftCell giftCell = new GiftSheet.GiftCell(context, currentAccount, null);
+                    giftCell.setLayoutParams(new RecyclerView.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                    view = giftCell;
+                    break;
+                }
+                case TYPE_LOADING: {
+                    final TextInfoPrivacyCell cell = new TextInfoPrivacyCell(context);
                     cell.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     view = cell;
                     break;
                 }
                 default: {
-                    view = new ShadowSectionCell(context);
+                    view = new TextInfoPrivacyCell(context);
                     break;
                 }
             }
@@ -190,18 +220,18 @@ public class LumkaGiftsActivity extends BaseFragment {
 
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-            Row row = rows.get(position);
-            switch (row.type) {
-                case TYPE_HEADER: {
-                    ((HeaderCell) holder.itemView).setText(row.title);
-                    break;
-                }
-                case TYPE_ITEM: {
-                    TextSettingsCell cell = (TextSettingsCell) holder.itemView;
-                    boolean divider = position + 1 < rows.size() && rows.get(position + 1).type == TYPE_ITEM;
-                    cell.setTextAndValue(row.title, row.value, divider);
-                    break;
-                }
+            final int viewType = holder.getItemViewType();
+            if (viewType == TYPE_HEADER) {
+                ((HeaderCell) holder.itemView).setText("FAKE GIFT");
+            } else if (viewType == TYPE_GIFT) {
+                final TL_stars.StarGift gift = gifts.get(position - 1);
+                final GiftSheet.GiftCell giftCell = (GiftSheet.GiftCell) holder.itemView;
+                giftCell.setStarsGift(gift, false, false, false, false, false);
+                giftCell.setOnClickListener(v -> sendGift(gift.id));
+            } else if (viewType == TYPE_LOADING) {
+                ((TextInfoPrivacyCell) holder.itemView).setText("Загрузка подарков…");
+            } else {
+                ((TextInfoPrivacyCell) holder.itemView).setText("Подарки видны только в LumkaGram. Получатель должен быть добавлен в список мод-юзеров, звёзды не тратятся.");
             }
         }
     }

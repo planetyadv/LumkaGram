@@ -110,7 +110,7 @@ public class LumkaSettingsActivity extends BaseFragment {
         allItems.add(Item.shadow());
 
         // 6. Gifts
-        allItems.add(Item.header("Подарки Lumka"));
+        allItems.add(Item.header("FAKE GIFT"));
         allItems.add(Item.button("Мод-юзеры (ID через запятую)", "editModUsers"));
         allItems.add(Item.shadow());
 

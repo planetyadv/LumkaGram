@@ -2849,6 +2849,8 @@ public class ChatActivity extends BaseFragment implements
 
         observersGroup = getNotificationCenter().createObserversGroup(this);
 
+        org.telegram.ui.Stars.StarsController.getInstance(currentAccount).loadStarGifts();
+
         getNotificationCenter().addPostponeNotificationsCallback(postponeNotificationsWhileLoadingCallback);
         getNotificationCenter().addWeakObserver(this, NotificationCenter.closeChats);
         linksHidden = getMessagesController().isUntrustedDialog(dialog_id);
@@ -2898,6 +2900,7 @@ public class ChatActivity extends BaseFragment implements
             observersGroup.add(NotificationCenter.didLoadSponsoredMessages);
         }
         observersGroup
+            .add(NotificationCenter.starGiftsLoaded)
             .add(NotificationCenter.updatedChatRanks)
             .add(NotificationCenter.premiumFloodWaitReceived)
             .add(NotificationCenter.messagesDidLoad)
@@ -4409,7 +4412,7 @@ public class ChatActivity extends BaseFragment implements
                 headerItem.lazilyAddSubItem(search, R.drawable.msg_search, LocaleController.getString(R.string.Search));
             }
             if (currentUser != null && !currentUser.self && currentChat == null && org.telegram.messenger.LumkaConfig.isModUser(dialog_id)) {
-                headerItem.lazilyAddSubItem(lumka_gift, R.drawable.menu_gift, "Отправить подарок");
+                headerItem.lazilyAddSubItem(lumka_gift, R.drawable.menu_gift, "Отправить FAKE GIFT");
             }
             if (ChatObject.isBoostSupported(currentChat) && (getUserConfig().isPremium() || ChatObject.isBoosted(chatInfo) || ChatObject.hasAdminRights(currentChat))) {
                 RLottieDrawable drawable = new RLottieDrawable(R.raw.boosts, dp(24), dp(24));
@@ -21337,9 +21340,42 @@ public class ChatActivity extends BaseFragment implements
         }
     }
 
+    /**
+     * A fake gift can only be drawn once the real Telegram gift catalog is loaded, because the
+     * gift card reuses the real gift sticker. When the catalog arrives, convert the fake gift
+     * text messages that are already in this chat.
+     */
+    private void refreshFakeGiftMessages() {
+        if (messages == null || messages.isEmpty() || dialog_id <= 0 || !org.telegram.messenger.LumkaConfig.isModUser(dialog_id)) {
+            return;
+        }
+        boolean updated = false;
+        for (int i = 0, size = messages.size(); i < size; i++) {
+            final MessageObject messageObject = messages.get(i);
+            if (messageObject == null || !(messageObject.messageOwner instanceof TLRPC.TL_message)) {
+                continue;
+            }
+            if (!org.telegram.messenger.LumkaGifts.isGift(messageObject.messageOwner.message)) {
+                continue;
+            }
+            final TLRPC.Message giftMessage = org.telegram.messenger.LumkaGifts.toServiceMessage(currentAccount, messageObject.messageOwner);
+            if (giftMessage == null) {
+                continue;
+            }
+            messageObject.messageOwner = giftMessage;
+            messageObject.setType();
+            updated = true;
+        }
+        if (updated && chatAdapter != null) {
+            chatAdapter.notifyDataSetChanged();
+        }
+    }
+
     @Override
     public void didReceivedNotification(int id, int account, final Object... args) {
-        if (id == NotificationCenter.messagesDidLoad) {
+        if (id == NotificationCenter.starGiftsLoaded) {
+            refreshFakeGiftMessages();
+        } else if (id == NotificationCenter.messagesDidLoad) {
             didReceivedNotification_messagesDidLoad(id, account, args);
         } else {
             didReceivedNotification2(id, account, args);
