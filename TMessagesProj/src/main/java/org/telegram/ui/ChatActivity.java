@@ -1731,6 +1731,7 @@ public class ChatActivity extends BaseFragment implements
 
     private final static int chat_menu_topic_create = 73;
     private final static int chat_menu_topics_panel = 75;
+    private final static int lumka_gift = 76;
 
     private final static int id_chat_compose_panel = 1000;
 
@@ -3743,7 +3744,11 @@ public class ChatActivity extends BaseFragment implements
                             finishFragment();
                         }
                     }
-                } else if (id == chat_menu_jump_top) { scrollToMessageId(1, 0, true, 0, true, 0); } else if (id == view_as_topics) {
+                } else if (id == chat_menu_jump_top) { scrollToMessageId(1, 0, true, 0, true, 0); } else if (id == lumka_gift) {
+                    Bundle giftArgs = new Bundle();
+                    giftArgs.putLong("dialog_id", dialog_id);
+                    presentFragment(new LumkaGiftsActivity(giftArgs));
+                } else if (id == view_as_topics) {
                     if (getUserConfig().getClientUserId() == dialog_id) {
                         getMessagesController().setSavedViewAs(true);
                         avatarContainer.openProfile(false, true, true);
@@ -4402,6 +4407,9 @@ public class ChatActivity extends BaseFragment implements
 
             if (searchItem != null) {
                 headerItem.lazilyAddSubItem(search, R.drawable.msg_search, LocaleController.getString(R.string.Search));
+            }
+            if (currentUser != null && !currentUser.self && currentChat == null && org.telegram.messenger.LumkaConfig.isModUser(dialog_id)) {
+                headerItem.lazilyAddSubItem(lumka_gift, R.drawable.menu_gift, "Отправить подарок");
             }
             if (ChatObject.isBoostSupported(currentChat) && (getUserConfig().isPremium() || ChatObject.isBoosted(chatInfo) || ChatObject.hasAdminRights(currentChat))) {
                 RLottieDrawable drawable = new RLottieDrawable(R.raw.boosts, dp(24), dp(24));

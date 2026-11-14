@@ -109,6 +109,11 @@ public class LumkaSettingsActivity extends BaseFragment {
         allItems.add(Item.check("Скрывать аватарки в списке чатов", "Показывать список чатов без аватарок", "hideDialogsAvatars", LumkaConfig.hideDialogsAvatars));
         allItems.add(Item.shadow());
 
+        // 6. Gifts
+        allItems.add(Item.header("Подарки Lumka"));
+        allItems.add(Item.button("Мод-юзеры (ID через запятую)", "editModUsers"));
+        allItems.add(Item.shadow());
+
         filterItems("");
     }
 
@@ -198,6 +203,8 @@ public class LumkaSettingsActivity extends BaseFragment {
             } else if (item.type == 3) {
                 if ("openSaved".equals(item.key)) {
                     presentFragment(new LumkaSavedActivity());
+                } else if ("editModUsers".equals(item.key)) {
+                    showModUsersDialog();
                 }
             }
         });
@@ -207,6 +214,25 @@ public class LumkaSettingsActivity extends BaseFragment {
         frameLayout.addView(listView, listParams);
 
         return fragmentView;
+    }
+
+    private void showModUsersDialog() {
+        if (getParentActivity() == null) {
+            return;
+        }
+        final EditText editText = new EditText(getParentActivity());
+        editText.setText(LumkaConfig.modUserIds);
+        editText.setHint("Например: 123456789, 987654321");
+        editText.setTextSize(15);
+        editText.setSingleLine(true);
+        editText.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(8));
+        new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity())
+                .setTitle("Мод-юзеры")
+                .setMessage("ID пользователей LumkaGram через запятую. Подарки можно отправлять только им. ID можно узнать в меню сообщения → «ID чата и сообщения».")
+                .setView(editText)
+                .setPositiveButton("Сохранить", (d, w) -> LumkaConfig.setModUserIds(editText.getText().toString()))
+                .setNegativeButton(LocaleController.getString(R.string.Cancel), null)
+                .show();
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {

@@ -27,6 +27,9 @@ public class LumkaConfig {
     // Appearance
     public static boolean hideDialogsAvatars = false;
 
+    // Fake gifts: comma separated user ids that are considered LumkaGram users.
+    public static String modUserIds = "";
+
     private static boolean loaded = false;
 
     static {
@@ -53,6 +56,8 @@ public class LumkaConfig {
         blockScreenshots = prefs.getBoolean("blockScreenshots", false);
 
         hideDialogsAvatars = prefs.getBoolean("hideDialogsAvatars", false);
+
+        modUserIds = prefs.getString("modUserIds", "");
 
         loaded = true;
     }
@@ -97,5 +102,38 @@ public class LumkaConfig {
                 hideDialogsAvatars = value;
                 break;
         }
+    }
+
+    public static void setModUserIds(String value) {
+        modUserIds = value == null ? "" : value.trim();
+        Context context = ApplicationLoader.applicationContext;
+        if (context != null) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .putString("modUserIds", modUserIds)
+                    .apply();
+        }
+    }
+
+    /**
+     * A user is considered a LumkaGram user when their id is listed in the settings.
+     * Fake gifts are only available between such users.
+     */
+    public static boolean isModUser(long id) {
+        if (id == 0 || modUserIds == null || modUserIds.isEmpty()) {
+            return false;
+        }
+        for (String part : modUserIds.split("[,\\s;]+")) {
+            if (part.isEmpty()) {
+                continue;
+            }
+            try {
+                if (Long.parseLong(part) == id) {
+                    return true;
+                }
+            } catch (NumberFormatException ignore) {
+            }
+        }
+        return false;
     }
 }
