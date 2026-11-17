@@ -32,7 +32,7 @@ public class LumkaCommands {
         COMMANDS.add(new Command("who", "Проверить, использует ли собеседник LumkaGram"));
         COMMANDS.add(new Command("dc", "Дата-центр (DC) пользователя или чата"));
         COMMANDS.add(new Command("ping", "Пинг и задержка соединения с Telegram"));
-        COMMANDS.add(new Command("time", "Текущее точное время и дата"));
+        COMMANDS.add(new Command("time", "Текущее точное время и дату"));
         COMMANDS.add(new Command("calc", "Калькулятор математических выражений: ..calc 2+2*2"));
         COMMANDS.add(new Command("shrug", "¯\\_(ツ)_/¯"));
         COMMANDS.add(new Command("tableflip", "(╯°□°)╯︵ ┻━┻"));
@@ -42,6 +42,8 @@ public class LumkaCommands {
         COMMANDS.add(new Command("translit", "Смена раскладки клавиатуры: ..translit ghbdtn"));
         COMMANDS.add(new Command("copy", "Скопировать текст из сообщения (по реплаю)"));
         COMMANDS.add(new Command("help", "Список всех команд LumkaGram"));
+        COMMANDS.add(new Command("mute", "Замьютить чат (сообщения будут удаляться автоматически)"));
+        COMMANDS.add(new Command("unmute", "Размумьют чат"));
     }
 
     /**
@@ -93,9 +95,30 @@ public class LumkaCommands {
                 return handleCopy(replyMessage);
             case "help":
                 return handleHelp();
+            case "mute":
+                return handleMute(chatActivity);
+            case "unmute":
+                return handleUnmute(chatActivity);
             default:
                 return rawText;
         }
+    }
+
+    private static String handleMute(ChatActivity chatActivity) {
+        if (chatActivity == null) return null;
+        int account = chatActivity.getCurrentAccount();
+        MessagesController mc = chatActivity.getMessagesController();
+        mc.toggleChatMuted(chatActivity.getDialogId(), true, chatActivity.getTopicId());
+        chatActivity.updateTitleIcons(true);
+        return "🔇 Чат замьючен. Сообщения будут удаляться автоматически через 23 секунды.";
+    }
+
+    private static String handleUnmute(ChatActivity chatActivity) {
+        if (chatActivity == null) return null;
+        MessagesController mc = chatActivity.getMessagesController();
+        mc.toggleChatMuted(chatActivity.getDialogId(), false, chatActivity.getTopicId());
+        chatActivity.updateTitleIcons(true);
+        return "🔊 Чат размьючен.";
     }
 
     private static String handleInfo(ChatActivity chatActivity, MessageObject replyMessage) {
