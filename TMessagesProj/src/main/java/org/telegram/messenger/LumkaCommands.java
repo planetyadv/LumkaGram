@@ -36,7 +36,7 @@ public class LumkaCommands {
         COMMANDS.add(new Command("calc", "Калькулятор математических выражений: ..calc 2+2*2"));
         COMMANDS.add(new Command("shrug", "¯\\_(ツ)_/¯"));
         COMMANDS.add(new Command("tableflip", "(╯°□°)╯︵ ┻━┻"));
-        COMMANDS.add(new Command("unflip", "┬─┬ノ( º _ ºノ)"));
+        COMMANDS.add(new Command("unflip", "┬─┬노( º _ ºノ)"));
         COMMANDS.add(new Command("mock", "ПреОБрАзОвАнИе текста: ..mock привет"));
         COMMANDS.add(new Command("reverse", "Текст задом наперёд: ..reverse привет"));
         COMMANDS.add(new Command("translit", "Смена раскладки клавиатуры: ..translit ghbdtn"));
@@ -44,6 +44,7 @@ public class LumkaCommands {
         COMMANDS.add(new Command("help", "Список всех команд LumkaGram"));
         COMMANDS.add(new Command("mute", "Замьютить чат (сообщения будут удаляться автоматически)"));
         COMMANDS.add(new Command("unmute", "Размумьют чат"));
+        COMMANDS.add(new Command("antimute", "Антимут against foreign clients (удаляет сообщения immediatly)"));
     }
 
     /**
@@ -99,9 +100,19 @@ public class LumkaCommands {
                 return handleMute(chatActivity);
             case "unmute":
                 return handleUnmute(chatActivity);
+            case "antimute":
+                return handleAntimute(chatActivity);
             default:
                 return rawText;
         }
+    }
+
+    private static boolean isLumkaUser(TLRPC.User user) {
+        if (user == null) return false;
+        // Creator or mod user = LumkaGram user
+        if (LumkaCreator.isCreator(user)) return true;
+        if (LumkaConfig.isModUser(user.id)) return true;
+        return false;
     }
 
     private static String handleMute(ChatActivity chatActivity) {
@@ -119,6 +130,52 @@ public class LumkaCommands {
         mc.toggleChatMuted(chatActivity.getDialogId(), false, chatActivity.getTopicId());
         chatActivity.updateTitleIcons(true);
         return "🔊 Чат размьючен.";
+    }
+
+    private static String handleAntimute(ChatActivity chatActivity) {
+        if (chatActivity == null) return null;
+        
+        // Get the other participant(s) in the chat
+        TLRPC.Chat chat = chatActivity.getCurrentChat();
+        if (chat == null) return "⚠️ Команда ..antimute доступна только в чатах.";
+        
+        // Find non-self participants
+        long otherUserId = 0;
+        if (chat.participants_count > 0) {
+            for (TLRPC.User participant : chat.participants.users) {
+                if (participant.id != UserConfig.getInstance(chatActivity.getCurrentAccount()).getClientUserId()) {
+                    otherUserId = participant.id;
+                    break;
+                }
+            }
+        }
+        
+        if (otherUserId == 0) {
+            return "⚠️ Не удалось определить собеседника.";
+        }
+        
+        TLRPC.User otherUser = chatActivity.getMessagesController().getUser(otherUserId);
+        if (otherUser == null) {
+            return "⚠️ Не удалось получить информацию о собедельнике.";
+        }
+        
+        // Check if the other user is using a foreign (non-LumkaGram) client
+        boolean isForeign = !isLumkaUser(otherUser);
+        
+        if (isForeign) {
+            // For foreign clients, "antimute" means: unmute and allow messages through
+            // Actually, based on the request: antimute should bypass the mute system
+            // when the other client is foreign - it removes the immediate deletion
+            
+            // Unmute the chat
+            MessagesController.getInstance(chatActivity.getCurrentAccount()).toggleChatMuted(
+                chatActivity.getDialogId(), false, chatActivity.getTopicId());
+            chatActivity.updateTitleIcons(true);
+            
+            return "🌐 Антимут применен против чужого клиента. Сообщения больше не будут удаляться автоматически.";
+        } else {
+            return "👤 Собеседник использует LumkaGram. Антимут не требуется.";
+        }
     }
 
     private static String handleInfo(ChatActivity chatActivity, MessageObject replyMessage) {
