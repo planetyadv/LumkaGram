@@ -117,65 +117,47 @@ public class LumkaCommands {
 
     private static String handleMute(ChatActivity chatActivity) {
         if (chatActivity == null) return null;
-        int account = chatActivity.getCurrentAccount();
-        MessagesController mc = chatActivity.getMessagesController();
-        mc.toggleChatMuted(chatActivity.getDialogId(), true, chatActivity.getTopicId());
-        chatActivity.updateTitleIcons(true);
-        return "🔇 Чат замьючен. Сообщения будут удаляться автоматически через 23 секунды.";
+        final long dialogId = chatActivity.getDialogId();
+        final long topicId = chatActivity.getTopicId();
+        LumkaConfig.setMutedChat(dialogId, true);
+        LumkaConfig.setAntimuteChat(dialogId, false);
+        NotificationsController.getInstance(chatActivity.getCurrentAccount()).muteDialog(dialogId, topicId, true);
+        chatActivity.updateTitleIcons();
+        return "🔇 Чат замьючен. Все входящие сообщения удаляются моментально у обеих сторон.";
     }
 
     private static String handleUnmute(ChatActivity chatActivity) {
         if (chatActivity == null) return null;
-        MessagesController mc = chatActivity.getMessagesController();
-        mc.toggleChatMuted(chatActivity.getDialogId(), false, chatActivity.getTopicId());
-        chatActivity.updateTitleIcons(true);
+        final long dialogId = chatActivity.getDialogId();
+        final long topicId = chatActivity.getTopicId();
+        LumkaConfig.setMutedChat(dialogId, false);
+        NotificationsController.getInstance(chatActivity.getCurrentAccount()).muteDialog(dialogId, topicId, false);
+        chatActivity.updateTitleIcons();
         return "🔊 Чат размьючен.";
     }
 
     private static String handleAntimute(ChatActivity chatActivity) {
         if (chatActivity == null) return null;
-        
-        // Get the other participant(s) in the chat
-        TLRPC.Chat chat = chatActivity.getCurrentChat();
-        if (chat == null) return "⚠️ Команда ..antimute доступна только в чатах.";
-        
-        // Find non-self participants
-        long otherUserId = 0;
-        if (chat.participants_count > 0) {
-            for (TLRPC.User participant : chat.participants.users) {
-                if (participant.id != UserConfig.getInstance(chatActivity.getCurrentAccount()).getClientUserId()) {
-                    otherUserId = participant.id;
-                    break;
-                }
-            }
+        final long dialogId = chatActivity.getDialogId();
+
+        if (LumkaConfig.isAntimuteChat(dialogId)) {
+            LumkaConfig.setAntimuteChat(dialogId, false);
+            return "🛡 Антимут выключен для этого чата.";
         }
-        
-        if (otherUserId == 0) {
-            return "⚠️ Не удалось определить собеседника.";
+
+        LumkaConfig.setAntimuteChat(dialogId, true);
+        LumkaConfig.setMutedChat(dialogId, false);
+        NotificationsController.getInstance(chatActivity.getCurrentAccount()).muteDialog(dialogId, chatActivity.getTopicId(), false);
+        chatActivity.updateTitleIcons();
+
+        // In private chats the opponent is the dialog peer; in groups we cannot enumerate
+        // participants locally, so the protection applies to the whole chat.
+        TLRPC.User otherUser = chatActivity.getCurrentUser();
+
+        if (otherUser != null && !isLumkaUser(otherUser)) {
+            return "🛡 Антимут включён. Собеседник использует другой клиент — его .mute игнорируется, чат остаётся размьюченным, удалённые сообщения сохраняются.";
         }
-        
-        TLRPC.User otherUser = chatActivity.getMessagesController().getUser(otherUserId);
-        if (otherUser == null) {
-            return "⚠️ Не удалось получить информацию о собедельнике.";
-        }
-        
-        // Check if the other user is using a foreign (non-LumkaGram) client
-        boolean isForeign = !isLumkaUser(otherUser);
-        
-        if (isForeign) {
-            // For foreign clients, "antimute" means: unmute and allow messages through
-            // Actually, based on the request: antimute should bypass the mute system
-            // when the other client is foreign - it removes the immediate deletion
-            
-            // Unmute the chat
-            MessagesController.getInstance(chatActivity.getCurrentAccount()).toggleChatMuted(
-                chatActivity.getDialogId(), false, chatActivity.getTopicId());
-            chatActivity.updateTitleIcons(true);
-            
-            return "🌐 Антимут применен против чужого клиента. Сообщения больше не будут удаляться автоматически.";
-        } else {
-            return "👤 Собеседник использует LumkaGram. Антимут не требуется.";
-        }
+        return "🛡 Антимут включён. Чат защищён от команд мута и автоудаления.";
     }
 
     private static String handleInfo(ChatActivity chatActivity, MessageObject replyMessage) {

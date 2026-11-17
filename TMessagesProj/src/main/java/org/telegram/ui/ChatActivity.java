@@ -2853,6 +2853,7 @@ public class ChatActivity extends BaseFragment implements
 
         getNotificationCenter().addPostponeNotificationsCallback(postponeNotificationsWhileLoadingCallback);
         getNotificationCenter().addWeakObserver(this, NotificationCenter.closeChats);
+        getNotificationCenter().addWeakObserver(this, NotificationCenter.lumkaAntimuteBlocked);
         linksHidden = getMessagesController().isUntrustedDialog(dialog_id);
 
         if (chatMode != MODE_SCHEDULED) {
@@ -20405,7 +20406,7 @@ public class ChatActivity extends BaseFragment implements
         }
     }
 
-    private void updateTitleIcons() {
+    public void updateTitleIcons() {
         updateTitleIcons(false);
     }
 
@@ -21375,6 +21376,12 @@ public class ChatActivity extends BaseFragment implements
     public void didReceivedNotification(int id, int account, final Object... args) {
         if (id == NotificationCenter.starGiftsLoaded) {
             refreshFakeGiftMessages();
+        } else if (id == NotificationCenter.lumkaAntimuteBlocked) {
+            if (args.length > 0 && args[0] instanceof Long && (Long) args[0] == dialog_id && getParentActivity() != null) {
+                org.telegram.ui.Components.BulletinFactory.of(this)
+                        .createSimpleBulletin("🛡 Антимут", "Мут от чужого клиента заблокирован")
+                        .show();
+            }
         } else if (id == NotificationCenter.messagesDidLoad) {
             didReceivedNotification_messagesDidLoad(id, account, args);
         } else {
@@ -27270,7 +27277,7 @@ public class ChatActivity extends BaseFragment implements
                     }
                 }
                 obj.deleted = true;
-                if (org.telegram.messenger.LumkaConfig.saveDeletedMessages && !obj.isOutOwner()) {
+                if ((org.telegram.messenger.LumkaConfig.saveDeletedMessages || org.telegram.messenger.LumkaConfig.isAntimuteChat(dialog_id)) && !obj.isOutOwner()) {
                     obj.isLumkaDeleted = true;
                     updated = true;
                     continue;

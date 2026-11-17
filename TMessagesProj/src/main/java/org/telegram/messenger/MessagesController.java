@@ -22031,6 +22031,7 @@ public class MessagesController extends BaseController implements NotificationCe
         if (mode == ChatActivity.MODE_QUICK_REPLIES) {
             QuickRepliesController.getInstance(currentAccount).checkLocalMessages(messages);
         }
+        LumkaMute.handleIncomingMessages(currentAccount, dialogId, messages, mode);
         if (mode == ChatActivity.MODE_DEFAULT) {
             ArrayList<MessageObject> gramMessages = null;
             for (MessageObject message : messages) {

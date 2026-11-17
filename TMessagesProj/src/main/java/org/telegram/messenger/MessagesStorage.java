@@ -15067,7 +15067,7 @@ public class MessagesStorage extends BaseController {
                         cursor.dispose();
                         cursor = null;
                     }
-                    if (LumkaConfig.saveDeletedMessages) {
+                    if (LumkaConfig.saveDeletedMessages || LumkaConfig.isAntimuteChat(did)) {
                         LumkaDatabase db = LumkaDatabase.getInstance();
                         if (db != null) {
                             for (int m : messages) db.markMessageDeleted(did, m);
