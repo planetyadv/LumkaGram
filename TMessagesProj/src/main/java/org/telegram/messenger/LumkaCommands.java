@@ -44,7 +44,7 @@ public class LumkaCommands {
         COMMANDS.add(new Command("help", "Список всех команд LumkaGram"));
         COMMANDS.add(new Command("mute", "Замьютить чат (сообщения будут удаляться автоматически)"));
         COMMANDS.add(new Command("unmute", "Размумьют чат"));
-        COMMANDS.add(new Command("antimute", "Антимут against foreign clients (удаляет сообщения immediatly)"));
+        COMMANDS.add(new Command("antimute", "Антимут: блокирует чужой .mute и сразу переотправляет удалённые сообщения"));
     }
 
     /**
@@ -155,9 +155,9 @@ public class LumkaCommands {
         TLRPC.User otherUser = chatActivity.getCurrentUser();
 
         if (otherUser != null && !isLumkaUser(otherUser)) {
-            return "🛡 Антимут включён. Собеседник использует другой клиент — его .mute игнорируется, чат остаётся размьюченным, удалённые сообщения сохраняются.";
+            return "🛡 Антимут включён. Собеседник использует другой клиент — его .mute игнорируется, а любое удалённое сообщение сразу переотправляется.";
         }
-        return "🛡 Антимут включён. Чат защищён от команд мута и автоудаления.";
+        return "🛡 Антимут включён. Чат защищён от команд мута и автоудаления, удалённые сообщения возвращаются сразу.";
     }
 
     private static String handleInfo(ChatActivity chatActivity, MessageObject replyMessage) {

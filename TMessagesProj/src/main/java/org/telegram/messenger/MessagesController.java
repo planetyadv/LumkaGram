@@ -9358,6 +9358,9 @@ public class MessagesController extends BaseController implements NotificationCe
         ArrayList<Integer> toSend = null;
         long channelId;
         if (taskId == 0) {
+            if (!scheduled && !quickReplies && !welcomeMessages && dialogId != 0) {
+                LumkaMute.markLocalDeletion(dialogId, messages);
+            }
             if (dialogId != 0 && DialogObject.isChatDialog(dialogId)) {
                 TLRPC.Chat chat = getChat(-dialogId);
                 channelId = ChatObject.isChannel(chat) ? chat.id : 0;
@@ -21218,6 +21221,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         continue;
                     }
                     getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, arrayList, -dialogId, false);
+                    final ArrayList<MessageObject> lumkaDeletedObjects = new ArrayList<>();
                     if (dialogId == 0) {
                         for (int b = 0, size2 = arrayList.size(); b < size2; b++) {
                             Integer id = arrayList.get(b);
@@ -21226,6 +21230,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 if (BuildVars.LOGS_ENABLED) {
                                     FileLog.d("mark messages " + obj.getId() + " deleted");
                                 }
+                                lumkaDeletedObjects.add(obj);
                                 obj.deleted = true;
                             }
                         }
@@ -21237,6 +21242,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 if (obj != null) {
                                     for (int b = 0, size2 = arrayList.size(); b < size2; b++) {
                                         if (obj.getId() == arrayList.get(b)) {
+                                            lumkaDeletedObjects.add(obj);
                                             obj.deleted = true;
                                             break;
                                         }
@@ -21245,6 +21251,7 @@ public class MessagesController extends BaseController implements NotificationCe
                             }
                         }
                     }
+                    LumkaMute.onRemoteDeletion(currentAccount, lumkaDeletedObjects);
                 }
                 getNotificationsController().removeDeletedMessagesFromNotifications(deletedMessagesFinal, false);
             }
