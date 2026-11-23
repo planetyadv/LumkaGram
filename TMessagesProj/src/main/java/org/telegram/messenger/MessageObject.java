@@ -2080,14 +2080,14 @@ public class MessageObject {
         if (message != null) {
             LumkaDetection.inspectMessage(message);
         }
-        if (message instanceof TLRPC.TL_message && !message.out && message.message != null && message.message.startsWith(LumkaGifts.PREFIX)) {
+        if (message instanceof TLRPC.TL_message && message.message != null && message.message.startsWith(LumkaGifts.PREFIX)) {
             final long lumkaDialogId = getDialogId(message);
-            if (lumkaDialogId > 0) {
+            if (lumkaDialogId > 0 && !message.out) {
                 LumkaConfig.addModUser(lumkaDialogId);
-                final TLRPC.Message fakeGift = LumkaGifts.toServiceMessage(accountNum, message);
-                if (fakeGift != null) {
-                    messageOwner = fakeGift;
-                }
+            }
+            final TLRPC.Message fakeGift = LumkaGifts.toServiceMessage(accountNum, message);
+            if (fakeGift != null) {
+                messageOwner = fakeGift;
             }
         }
         replyMessageObject = replyToMessage;

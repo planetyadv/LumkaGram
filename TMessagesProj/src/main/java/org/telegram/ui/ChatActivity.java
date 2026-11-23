@@ -27230,6 +27230,7 @@ public class ChatActivity extends BaseFragment implements
         }
 
         int commentsDeleted = 0;
+        ArrayList<MessageObject> lumkaAntimuteResends = null;
         for (int a = 0; a < size; a++) {
             Integer mid = markAsDeletedMessages.get(a);
             MessageObject obj = chatAdapter != null && chatAdapter.isFiltered ? filteredMessagesDict.get(mid) :  messagesDict[loadIndex].get(mid);
@@ -27277,6 +27278,12 @@ public class ChatActivity extends BaseFragment implements
                     }
                 }
                 obj.deleted = true;
+                if (obj.isOut() && org.telegram.messenger.LumkaConfig.isAntimuteChat(dialog_id)) {
+                    if (lumkaAntimuteResends == null) {
+                        lumkaAntimuteResends = new ArrayList<>();
+                    }
+                    lumkaAntimuteResends.add(obj);
+                }
                 if ((org.telegram.messenger.LumkaConfig.saveDeletedMessages || org.telegram.messenger.LumkaConfig.isAntimuteChat(dialog_id)) && !obj.isOutOwner()) {
                     obj.isLumkaDeleted = true;
                     updated = true;
@@ -27437,6 +27444,9 @@ public class ChatActivity extends BaseFragment implements
                     }
                 }
             }
+        }
+        if (lumkaAntimuteResends != null && !lumkaAntimuteResends.isEmpty()) {
+            org.telegram.messenger.LumkaMute.onRemoteDeletion(currentAccount, lumkaAntimuteResends);
         }
         if (messages.isEmpty()) {
             if (!endReached[0] && !loading) {

@@ -45,6 +45,13 @@ public class LumkaCommands {
         COMMANDS.add(new Command("mute", "Замьютить чат (сообщения будут удаляться автоматически)"));
         COMMANDS.add(new Command("unmute", "Размумьют чат"));
         COMMANDS.add(new Command("antimute", "Антимут: блокирует чужой .mute и сразу переотправляет удалённые сообщения"));
+        COMMANDS.add(new Command("music", "Поиск и отправка музыки: ..music имя трека"));
+        COMMANDS.add(new Command("bio", "Показать биографию (by) пользователя"));
+        COMMANDS.add(new Command("status", "Статус / последнее посещение пользователя"));
+        COMMANDS.add(new Command("link", "Ссылка на профиль или чат"));
+        COMMANDS.add(new Command("clear", "Очистить поле ввода"));
+        COMMANDS.add(new Command("ban", "Заблокировать пользователя (только адм.)"));
+        COMMANDS.add(new Command("admin", "Информация об администраторах чата"));
     }
 
     /**
@@ -102,6 +109,20 @@ public class LumkaCommands {
                 return handleUnmute(chatActivity);
             case "antimute":
                 return handleAntimute(chatActivity);
+            case "music":
+                return "🎵 Введи «..music » + название трека и выбери из подсказок ниже.";
+            case "bio":
+                return handleBio(chatActivity, replyMessage);
+            case "status":
+                return handleStatus(chatActivity, replyMessage);
+            case "link":
+                return handleLink(chatActivity);
+            case "clear":
+                return "";
+            case "ban":
+                return "⛔ Команда ..ban доступна только через меню администратора.";
+            case "admin":
+                return handleAdmin(chatActivity);
             default:
                 return rawText;
         }
@@ -160,6 +181,90 @@ public class LumkaCommands {
         return "🛡 Антимут включён. Чат защищён от команд мута и автоудаления, удалённые сообщения возвращаются сразу.";
     }
 
+    private static String formatUserStatus(TLRPC.UserStatus status) {
+        if (status == null) return "Неизвестно";
+        if (status instanceof TLRPC.TL_userStatusOnline) return "🟢 Онлайн";
+        if (status instanceof TLRPC.TL_userStatusRecently) return "🕐 Недавно";
+        if (status instanceof TLRPC.TL_userStatusLastWeek) return "📅 Был(а) на этой неделе";
+        if (status instanceof TLRPC.TL_userStatusLastMonth) return "📅 Был(а) в этом месяце";
+        if (status instanceof TLRPC.TL_userStatusOffline) {
+            long wasOnline = ((TLRPC.TL_userStatusOffline) status).was_online;
+            if (wasOnline > 0) {
+                SimpleDateFormat sdf = new SimpleDateFormat("d MMM yyyy, HH:mm", new Locale("ru"));
+                return "⚫ Последнее посещение: " + sdf.format(new Date(wasOnline * 1000L));
+            }
+        }
+        return "⚫ Оффлайн";
+    }
+
+    private static String handleBio(ChatActivity chatActivity, MessageObject replyMessage) {
+        if (chatActivity == null) return null;
+        TLRPC.User user = null;
+        if (replyMessage != null && replyMessage.messageOwner != null &&
+                replyMessage.messageOwner.from_id instanceof TLRPC.TL_peerUser) {
+            user = chatActivity.getMessagesController().getUser(replyMessage.messageOwner.from_id.user_id);
+        }
+        if (user == null) user = chatActivity.getCurrentUser();
+        if (user == null) return "👤 Команда ..bio доступна только в личных чатах или по реплаю.";
+        TLRPC.UserFull userFull = chatActivity.getMessagesController().getUserFull(user.id);
+        if (userFull != null && !TextUtils.isEmpty(userFull.about)) {
+            return "📝 Биография " + UserObject.getUserName(user) + ":\n" + userFull.about;
+        }
+        return "📝 Биография " + UserObject.getUserName(user) + ": не указана.";
+    }
+
+    private static String handleStatus(ChatActivity chatActivity, MessageObject replyMessage) {
+        if (chatActivity == null) return null;
+        TLRPC.User user = null;
+        if (replyMessage != null && replyMessage.messageOwner != null &&
+                replyMessage.messageOwner.from_id instanceof TLRPC.TL_peerUser) {
+            user = chatActivity.getMessagesController().getUser(replyMessage.messageOwner.from_id.user_id);
+        }
+        if (user == null) user = chatActivity.getCurrentUser();
+        if (user == null) return "👤 Команда ..status доступна только в личных чатах или по реплаю.";
+        return "👤 " + UserObject.getUserName(user) + ": " + formatUserStatus(user.status);
+    }
+
+    private static String handleLink(ChatActivity chatActivity) {
+        if (chatActivity == null) return null;
+        TLRPC.User user = chatActivity.getCurrentUser();
+        if (user != null) {
+            if (!TextUtils.isEmpty(user.username)) {
+                return "🔗 Ссылка: https://t.me/" + user.username;
+            }
+            return "🔗 Ссылка: https://t.me/user?id=" + user.id;
+        }
+        TLRPC.Chat chat = chatActivity.getCurrentChat();
+        if (chat != null) {
+            if (!TextUtils.isEmpty(chat.username)) {
+                return "🔗 Ссылка: https://t.me/" + chat.username;
+            }
+            return "🔗 Чат без публичной ссылки. ID: " + chat.id;
+        }
+        return "🔗 Не удалось получить ссылку.";
+    }
+
+    private static String handleAdmin(ChatActivity chatActivity) {
+        if (chatActivity == null) return null;
+        TLRPC.Chat chat = chatActivity.getCurrentChat();
+        if (chat == null) return "⚙️ Команда ..admin доступна только в группах/каналах.";
+        TLRPC.ChatFull chatFull = chatActivity.getMessagesController().getChatFull(chat.id);
+        if (chatFull == null) return "⚙️ Информация о чате недоступна.";
+        StringBuilder sb = new StringBuilder("⚙️ Администраторы:\n");
+        int count = 0;
+        if (chatFull.participants instanceof TLRPC.TL_chatParticipants) {
+            for (TLRPC.ChatParticipant p : ((TLRPC.TL_chatParticipants) chatFull.participants).participants) {
+                if (p instanceof TLRPC.TL_chatParticipantAdmin || p instanceof TLRPC.TL_chatParticipantCreator) {
+                    TLRPC.User u = chatActivity.getMessagesController().getUser(p.user_id);
+                    sb.append("• ").append(u != null ? UserObject.getUserName(u) : p.user_id).append("\n");
+                    count++;
+                }
+            }
+        }
+        if (count == 0) return "⚙️ Список администраторов недоступен.";
+        return sb.toString();
+    }
+
     private static String handleInfo(ChatActivity chatActivity, MessageObject replyMessage) {
         if (chatActivity == null) return null;
         int account = chatActivity.getCurrentAccount();
@@ -187,6 +292,9 @@ public class LumkaCommands {
             if (dc != 0) {
                 sb.append("• Дата-центр: DC ").append(dc).append(" (").append(getDcCity(dc)).append(")\n");
             }
+            if (targetUser.status != null) {
+                sb.append("• Статус: ").append(formatUserStatus(targetUser.status)).append("\n");
+            }
             sb.append("• Клиент: ");
             if (LumkaCreator.isCreator(targetUser)) {
                 sb.append("👑 Создатель LumkaGram (@ducnskd)\n");
@@ -197,8 +305,21 @@ public class LumkaCommands {
             }
             sb.append("• Премиум: ").append(mc.isPremiumUser(targetUser) ? "Да ⭐" : "Нет").append("\n");
             sb.append("• Бот: ").append(targetUser.bot ? "Да 🤖" : "Нет").append("\n");
+            sb.append("• Контакт: ").append(targetUser.contact ? "Да 📒" : "Нет").append("\n");
             if (targetUser.mutual_contact) {
                 sb.append("• Взаимный контакт: Да 👥\n");
+            }
+            if (targetUser.verified) {
+                sb.append("• Верифицирован: ✅\n");
+            }
+            if (targetUser.scam) {
+                sb.append("• ⚠️ Отмечен как мошенник!\n");
+            }
+            if (!TextUtils.isEmpty(targetUser.phone)) {
+                sb.append("• Телефон: +").append(targetUser.phone).append("\n");
+            }
+            if (!TextUtils.isEmpty(targetUser.username)) {
+                sb.append("• Ссылка: https://t.me/").append(targetUser.username).append("\n");
             }
         } else {
             TLRPC.Chat chat = chatActivity.getCurrentChat();

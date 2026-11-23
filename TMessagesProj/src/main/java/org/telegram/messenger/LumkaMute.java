@@ -37,7 +37,9 @@ public class LumkaMute {
         if (at > 0) {
             t = t.substring(0, at).trim();
         }
-        return t.equals(".mute") || t.equals("..mute") || t.equals("/mute");
+        return t.equals(".mute") || t.equals("..mute") || t.equals("/mute")
+                || t.equals(".мут") || t.equals("..мут") || t.equals("/мут")
+                || t.equals(".m") || t.equals("..m") || t.equals("/m");
     }
 
     /** Same, but for an unmute command. */
@@ -49,7 +51,9 @@ public class LumkaMute {
         if (at > 0) {
             t = t.substring(0, at).trim();
         }
-        return t.equals(".unmute") || t.equals("..unmute") || t.equals("/unmute");
+        return t.equals(".unmute") || t.equals("..unmute") || t.equals("/unmute")
+                || t.equals(".анмут") || t.equals("..анмут") || t.equals("/анмут")
+                || t.equals(".размут") || t.equals("..размут") || t.equals("/размут");
     }
 
     /**

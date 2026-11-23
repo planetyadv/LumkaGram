@@ -151,7 +151,7 @@ public class LumkaGifts {
         action.gift = gift;
         action.from_id = service.from_id;
         action.to_id = src.out ? src.peer_id : self;
-        action.forceIn = true;
+        action.forceIn = !src.out;
         action.convert_stars = 0;
         action.message = new TLRPC.TL_textWithEntities();
         action.message.text = CAPTION;

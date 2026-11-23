@@ -41,6 +41,7 @@ import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.LumkaCommands;
+import org.telegram.messenger.LumkaMusic;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
@@ -114,6 +115,7 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
     private ArrayList<String> searchResultHashtags;
     private ArrayList<String> searchResultCommands;
     private ArrayList<String> searchResultCommandsHelp;
+    private ArrayList<LumkaMusic.Track> searchResultMusic;
     private String quickRepliesQuery;
     private ArrayList<QuickRepliesController.QuickReply> quickReplies;
     private ArrayList<MediaDataController.KeywordResult> searchResultSuggestions;
@@ -1172,7 +1174,13 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
         final boolean oldHintHashtagDivider = hintHashtagDivider;
         hintHashtag = null;
         hintHashtagDivider = false;
-        if (text.startsWith("..") && !text.contains(" ")) {
+        if (text.startsWith("..music ") || text.startsWith("..m ")) {
+            foundType = 98;
+            int prefixLen = text.startsWith("..music ") ? 8 : 4;
+            result.append(text.substring(prefixLen));
+            resultStartPosition = 0;
+            resultLength = text.length();
+        } else if (text.startsWith("..") && !text.contains(" ")) {
             foundType = 99;
             result.append(text.substring(2));
             resultStartPosition = 0;
@@ -1609,6 +1617,33 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
             searchResultBotContext = null;
             notifyDataSetChanged();
             delegate.needChangePanelVisibility(!newResult.isEmpty() || quickReplies != null && !quickReplies.isEmpty());
+        } else if (foundType == 98) {
+            final String query = result.toString().trim();
+            searchResultCommands = null;
+            searchResultCommandsHelp = null;
+            searchResultCommandsUsers = null;
+            searchResultCommandsEphemeral = null;
+            searchResultHashtags = null;
+            stickers = null;
+            searchResultUsernames = null;
+            searchResultUsernamesMap = null;
+            searchResultSuggestions = null;
+            quickReplies = null;
+            contextMedia = false;
+            searchResultBotContext = null;
+            searchResultMusic = null;
+            if (query.length() >= 1) {
+                notifyDataSetChanged();
+                delegate.needChangePanelVisibility(false);
+                LumkaMusic.search(currentAccount, query, tracks -> {
+                    searchResultMusic = tracks;
+                    notifyDataSetChanged();
+                    delegate.needChangePanelVisibility(tracks != null && !tracks.isEmpty());
+                });
+            } else {
+                notifyDataSetChanged();
+                delegate.needChangePanelVisibility(false);
+            }
         } else if (foundType == 99) {
             ArrayList<String> newResult = new ArrayList<>();
             ArrayList<String> newResultHelp = new ArrayList<>();
@@ -1749,8 +1784,13 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
             count += searchResultUsernames.size();
         } else if (searchResultHashtags != null) {
             count += searchResultHashtags.size();
+        } else if (searchResultMusic != null) {
+            count += searchResultMusic.size();
         } else if (searchResultCommands != null || quickReplies != null) {
             count += (quickReplies == null ? 0 : quickReplies.size()) + (searchResultCommands == null ? 0 : searchResultCommands.size());
+        } else if (searchResultMusic != null) {
+            if (i < 0 || i >= searchResultMusic.size()) return null;
+            return searchResultMusic.get(i);
         } else if (searchResultSuggestions != null) {
             count += searchResultSuggestions.size();
         }
@@ -1779,6 +1819,9 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
         }
         if (searchResultCommands != null) {
             searchResultCommands.clear();
+        }
+        if (searchResultMusic != null) {
+            searchResultMusic.clear();
         }
         if (quickReplies != null) {
             quickReplies.clear();
@@ -1877,6 +1920,9 @@ public class MentionsAdapter extends RecyclerListView.SelectionAdapter implement
                 return null;
             }
             return searchResultHashtags.get(i);
+        } else if (searchResultMusic != null) {
+            if (i < 0 || i >= searchResultMusic.size()) return null;
+            return searchResultMusic.get(i);
         } else if (searchResultSuggestions != null) {
             if (i < 0 || i >= searchResultSuggestions.size()) {
                 return null;

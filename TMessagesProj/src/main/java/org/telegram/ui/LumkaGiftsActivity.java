@@ -139,7 +139,7 @@ public class LumkaGiftsActivity extends BaseFragment implements NotificationCent
         LumkaConfig.addModUser(dialogId);
         try {
             final String text = LumkaGifts.build(giftId);
-            SendMessagesHelper.getInstance(UserConfig.selectedAccount)
+            SendMessagesHelper.getInstance(currentAccount)
                     .sendMessage(SendMessagesHelper.SendMessageParams.of(text, dialogId));
             if (getParentActivity() != null) {
                 BulletinFactory.of(this)

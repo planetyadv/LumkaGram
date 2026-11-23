@@ -648,6 +648,16 @@ public class MentionsContainerView extends FrameLayout implements NotificationCe
                     spannable.setSpan(new URLSpanUserMention("" + user.id, 3), 0, spannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     delegate.replaceText(start, len, spannable, false);
                 }
+            } else if (object instanceof org.telegram.messenger.LumkaMusic.Track) {
+                org.telegram.messenger.LumkaMusic.Track track = (org.telegram.messenger.LumkaMusic.Track) object;
+                if (baseFragment instanceof ChatActivity && track.messageObject != null) {
+                    ArrayList<MessageObject> audios = new ArrayList<>();
+                    audios.add(track.messageObject);
+                    ((ChatActivity) baseFragment).sendAudio(audios, null, true, 0, 0, 0, false, 0);
+                }
+                delegate.replaceText(start, len, "", false);
+                updateVisibility(false);
+                return;
             } else if (object instanceof String) {
                 delegate.replaceText(start, len, object + " ", false);
             } else if (object instanceof MediaDataController.KeywordResult) {

@@ -671,6 +671,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int userInfoRow;
     private int channelInfoRow;
     private int usernameRow;
+    private int lumkaIdRow;
     private int notificationsDividerRow;
     private int notificationsRow;
     private int bizHoursRow;
@@ -4458,6 +4459,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 onMemberClick(participant, false, view);
             } else if (position == addMemberRow) {
                 openAddMember();
+            } else if (position == lumkaIdRow) {
+                long id = userId != 0 ? userId : (chatId != 0 ? chatId : dialog_id);
+                AndroidUtilities.addToClipboard(String.valueOf(id));
+                if (getParentActivity() != null) {
+                    BulletinFactory.of(ProfileActivity.this).createCopyBulletin(LocaleController.getString(R.string.LinkCopied)).show();
+                }
             } else if (position == usernameRow) {
                 processOnClickOrPress(position, view, x, y);
             } else if (position == linkedCommunityRow) {
@@ -7435,6 +7442,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private boolean processOnClickOrPress(final int position, final View view, final float x, final float y) {
+        if (position == lumkaIdRow) {
+            long id = userId != 0 ? userId : (chatId != 0 ? chatId : dialog_id);
+            AndroidUtilities.addToClipboard(String.valueOf(id));
+            if (getParentActivity() != null) {
+                BulletinFactory.of(ProfileActivity.this).createCopyBulletin(LocaleController.getString(R.string.LinkCopied)).show();
+            }
+            return true;
+        }
         if (position == usernameRow || position == setUsernameRow) {
             final String username;
             final TLRPC.TL_username usernameObj;
@@ -10884,6 +10899,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         locationRow = -1;
         channelInfoRow = -1;
         usernameRow = -1;
+        lumkaIdRow = -1;
         settingsTimerRow = -1;
         settingsKeyRow = -1;
         notificationsDividerRow = -1;
@@ -11078,6 +11094,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (user != null && username != null) {
                     usernameRow = rowCount++;
                 }
+                if (userId != 0) {
+                    lumkaIdRow = rowCount++;
+                }
                 if (userInfo != null) {
                     if (userInfo.birthday != null) {
                         birthdayRow = rowCount++;
@@ -11236,6 +11255,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (ChatObject.isPublic(currentChat)) {
                     usernameRow = rowCount++;
                 }
+                lumkaIdRow = rowCount++;
             }
             if (emptyRow < 0 && emptyRow2 < 0) {
                 if (hasMusic || hasBalance || peerColor != null || actionsView == null) {
@@ -13674,6 +13694,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         }
                         isFragmentPhoneNumber = phoneNumber != null && phoneNumber.matches("888\\d{8}");
                         detailCell.setTextAndValue(text, LocaleController.getString(isFragmentPhoneNumber ? R.string.AnonymousNumber : R.string.PhoneMobile), false);
+                    } else if (position == lumkaIdRow) {
+                        long id = userId != 0 ? userId : (chatId != 0 ? chatId : dialog_id);
+                        detailCell.setTextAndValue("id: " + id, "ID", false);
                     } else if (position == noteRow) {
                         final TLRPC.UserFull userInfo = getMessagesController().getUserFull(userId);
                         if (userInfo == null) return;
@@ -14492,7 +14515,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (position == infoHeaderRow || position == membersHeaderRow || position == settingsSectionRow2 ||
                     position == numberSectionRow || position == helpHeaderRow || position == debugHeaderRow || position == botPermissionsHeader) {
                 return VIEW_TYPE_HEADER;
-            } else if (position == phoneRow || position == locationRow || position == numberRow || position == birthdayRow) {
+            } else if (position == phoneRow || position == locationRow || position == numberRow || position == birthdayRow || position == lumkaIdRow) {
                 return VIEW_TYPE_TEXT_DETAIL;
             } else if (position == usernameRow || position == setUsernameRow) {
                 return VIEW_TYPE_TEXT_DETAIL_MULTILINE;
